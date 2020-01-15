@@ -2,7 +2,8 @@ import time from os
 
 --------------------- Calcul des énoncés --------------------
 
-m = do
+local m
+do
   import floor, random, randomseed from require "math"
 
   MIN = 100
@@ -22,18 +23,18 @@ m = do
     min, max, delta = bornes min, max
     a = min + random delta
     b = min + random delta
-    "#{a} + #{b} = ?", "#{a + b}"
+    "#{a} + #{b} \n= ?", "#{a + b}"
 
   m.complement = (min, max) ->
     min, max, delta = bornes min, max
     a = min + random delta
-    "#{a} + ? = #{max}", "#{max - a}"
+    "#{a} + ? \n= #{max}", "#{max - a}"
 
   m.multiplication = (min, max) ->
     min, max, delta = bornes min, max
     a = min + random delta
     b = min + random delta
-    "#{a} × #{b} = ?", "#{a * b}"
+    "#{a} × #{b} \n= ?", "#{a * b}"
 
   m.multiplication_ir = (min, max) ->
     min, max, delta = bornes min, max
@@ -41,7 +42,7 @@ m = do
     d = random min
     a = c + d
     b = c - d
-    "#{a} × #{b} = ?", "#{a * b}"
+    "#{a} × #{b} \n= ?", "#{a * b}"
 
   m.multiplication_dc = (min, max) ->
     min, max, delta = bornes min, max
@@ -49,15 +50,13 @@ m = do
     d = random min
     a = c - min - 1 + d
     b = c - d
-    "#{a} × #{b} = ?", "#{a * b}"
+    "#{a} × #{b} \n= ?", "#{a * b}"
 
   m.soustraction = (min, max) ->
     min, max, delta = bornes min, max
     a = min + random delta
     b = min + random delta
-    "#{a} - #{b} = ?", "#{a - b}"
-
-  m
+    "#{a} - #{b} \n= ?", "#{a - b}"
 
 
 ----------------------- DOM -----------------------------------
@@ -143,30 +142,15 @@ class EL
     @element.innerHTML = h
     self
 
-  style: =>
-    self.element.style
-
   value: =>
     self.element.value
 
-  __lte: (h) => @replace h
+  __lt: (h) => @replace h
 
   __shl: (el) => @append el
 
 
--------- Fonctions auxiliaires ---------
-
-sleep = (t) ->
-  fin = time! + t
-  while time! < fin
-    (->)()
-
 -------- Procédure --------
-
-i = 0
-for str in pairs m
-  i += 1
-  print i, str
 
 body = EL "corps"
 body << html -> {
@@ -177,23 +161,21 @@ body << html -> {
     concat([(html -> {option {value: str, str}}) for str in pairs m], '')
   }
   label "&nbsp Durée"
-  input {id: "duree", value: 8, style: "width:3em;"}
+  input {id: "duree", value: 8}
   label "&nbsp Nombre"
-  input {id: "nombre", value: 5, style: "width:3em;"}
+  input {id: "nombre", value: 5}
   label "&nbsp Min"
-  input {id: "min", value: 100, style: "width:5em;"}
+  input {id: "min", value: 100}
   label "&nbsp Max"
-  input {id: "max", value: 1000, style: "width:5em;"}
+  input {id: "max", value: 1000}
   "&nbsp"
   button {id: "lancer", "C'est parti !"}
   div {
-    id: "question"
-    style: "'position:absolute; left:0; top:100px; width:100%;'"
-    p {id: "enonce", style:"'width:100%; height:100%; font-size:1200%; text-align:center; vertical-align:top; padding:0 0 0 0; margin:0;'"}
+    id: "question", class: "zone"
+    p {id: "enonce"}
   }
   div {
-    id: "reponse"
-    style: "'position:absolute; left:0; top:100px; width:100%; font-size:500%'"
+    id: "reponse", class: "zone"
   }
 }
 
@@ -205,18 +187,17 @@ duree = EL("duree")\value
 nombre = EL("nombre")\value
 min = EL("min")\value
 max = EL("max")\value
+
 bouton.element.onclick = ->
-  reponse\replace ""
+  reponse < ""
   d, n = tonumber(duree!), tonumber(nombre!)
   reponses = {}
   for i = 0, n - 1
     q, r = m[exercice!] min!, max!
     insert reponses, {q, r}
-    w\setTimeout (-> enonce\replace q), 1000 * i * d
-  w\setTimeout (-> enonce\replace "Terminé !"), 1000 * n * d
+    w\setTimeout (-> enonce < q\gsub '\n', '<br>'), 1000 * i * d
+  w\setTimeout (-> enonce < "Terminé !"), 1000 * n * d
   w\setTimeout (->
-    enonce\replace ""
-    for k, v in pairs reponse\style!
-      print k, v
-    reponse\replace concat [r[1]\gsub("?", html -> {span{r[2], style:"font-weight:bold"}}) for r in *reponses], "<br>"
+    enonce < ""
+    reponse < concat [r[1]\gsub("?", html -> {span{r[2], class:"resultat"}}) for r in *reponses], "<br>"
   ), 1000 * (n + 1) * d

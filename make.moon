@@ -6,7 +6,8 @@ page\close!
 
 for n in contenu\gmatch "{{(.-)}}" do
   f = io.open n
-  contenu = contenu\gsub "{{#{n}}}", f\read("*a")\gsub("%%", "%%%%")
+  ct = f\read("*a")\gsub("%%", "%%%%")
+  contenu, a, b = contenu\gsub "{{#{n}}}", ct
   f\close!
 
 sortie = io.open "mental.html", "w"
