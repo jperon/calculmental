@@ -4,59 +4,129 @@ import time from os
 
 local m
 do
-  import floor, random, randomseed from require "math"
+  import floor, log, random, randomseed from require "math"
 
   MIN = 100
   randomseed(time!)
 
-
-  bornes = (min, max) ->
-    min = tonumber(min or MIN) - 1
-    max = tonumber(max or 10 * min)
+  bornes = (args) ->
+    min = tonumber(args.Min or MIN) - 1
+    max = tonumber(args.Max or 10 * min)
     min, max = max, min if min > max
     min, max, max - min
 
+  pow = (a, n) ->
+    r = 1
+    r = r*a for i = 1, n
+    r
+
+  round = (d) ->
+    f = floor d
+    f if d - f < .5 else f + 1
 
   m = {}
 
-  m.addition = (min, max) ->
-    min, max, delta = bornes min, max
-    a = min + random delta
-    b = min + random delta
-    "#{a} + #{b} \n= ?", "#{a + b}"
+  m.addition = {
+    args: {
+      Min: 10
+      Max: 100
+      ["Nbre de termes"]: 2
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      a = min + random delta
+      b = min + random delta
+      "#{a} + #{b} = ?", "#{a + b}"
+  }
 
-  m.complement = (min, max) ->
-    min, max, delta = bornes min, max
-    a = min + random delta
-    "#{a} + ? \n= #{max}", "#{max - a}"
+  m.complement = {
+    args: {
+      Min: 10
+      Max: 100
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      a = min + random delta
+      "#{a} + ? \n= #{max}", "#{max - a}"
+  }
 
-  m.multiplication = (min, max) ->
-    min, max, delta = bornes min, max
-    a = min + random delta
-    b = min + random delta
-    "#{a} × #{b} \n= ?", "#{a * b}"
+  m.multiplication = {
+    args: {
+      Min: 10
+      Max: 100
+      ["Nbre de termes"]: 2
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      a = min + random delta
+      b = min + random delta
+      "#{a} × #{b} \n= ?", "#{a * b}"
+  }
 
-  m.multiplication_ir = (min, max) ->
-    min, max, delta = bornes min, max
-    c = min + 1 + 10 * random floor delta/10
-    d = random min
-    a = c + d
-    b = c - d
-    "#{a} × #{b} \n= ?", "#{a * b}"
+  m.multiplication_ir = {
+    args: {
+      Min: 10
+      Max: 100
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      c = min + 1 + 10 * random floor delta/10
+      d = random min
+      a = c + d
+      b = c - d
+      "#{a} × #{b} \n= ?", "#{a * b}"
+  }
 
-  m.multiplication_dc = (min, max) ->
-    min, max, delta = bornes min, max
-    c = min + 1 + 10 * random floor delta/10
-    d = random min
-    a = c - min - 1 + d
-    b = c - d
-    "#{a} × #{b} \n= ?", "#{a * b}"
+  m.multiplication_dc = {
+    args: {
+      Min: 10
+      Max: 100
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      c = min + 1 + 10 * random floor delta/10
+      d = random min
+      a = c - min - 1 + d
+      b = c - d
+      "#{a} × #{b} \n= ?", "#{a * b}"
+  }
 
-  m.soustraction = (min, max) ->
-    min, max, delta = bornes min, max
-    a = min + random delta
-    b = min + random delta
-    "#{a} - #{b} \n= ?", "#{a - b}"
+  m["Ordre de grandeur"] = {
+    args: {
+      Min: 10
+      Max: 100
+      ["Nbre de termes"]: 2
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      a = min + random delta
+      b = min + random delta
+      oa = pow 10, floor log(a, 10)
+      ob = pow 10, floor log(b, 10)
+      ga = oa * round a/oa
+      gb = ob * round b/ob
+      "#{a} × #{b} \n≈ ?", "#{ga} × #{gb} = #{ga * gb}"
+  }
+
+  m.soustraction = {
+    args: {
+      Min: 10
+      Max: 100
+      ["Nbre de termes"]: 2
+    }
+    duree: 8
+    (args) ->
+      min, max, delta = bornes args
+      a = min + random delta
+      b = min + random delta
+      "#{a} - #{b} \n= ?", "#{a - b}"
+  }
 
 
 ----------------------- DOM -----------------------------------
@@ -158,16 +228,9 @@ body << html -> {
   select {
     id: "exercice"
     name: "Exercice"
-    concat([(html -> {option {value: str, str}}) for str in pairs m], '')
+    concat([(html -> {option {value: "'#{str}'", str}}) for str in pairs m], '')
   }
-  label "&nbsp Durée"
-  input {id: "duree", value: 8}
-  label "&nbsp Nombre"
-  input {id: "nombre", value: 5}
-  label "&nbsp Min"
-  input {id: "min", value: 100}
-  label "&nbsp Max"
-  input {id: "max", value: 1000}
+  span {id: "args"}
   "&nbsp"
   button {id: "lancer", "C'est parti !"}
   div {
@@ -179,21 +242,44 @@ body << html -> {
   }
 }
 
+args = EL "args"
 bouton = EL "lancer"
 enonce = EL "enonce"
 reponse = EL "reponse"
-exercice = EL("exercice")\value
-duree = EL("duree")\value
-nombre = EL("nombre")\value
-min = EL("min")\value
-max = EL("max")\value
+exercice = EL "exercice"
+
+local nombre, duree
+maj_args = -> --[[]]
+  ex = m[exercice\value!]
+  args < html -> {
+    label "&nbsp Nbre"
+    input {id: "nombre", value: 5}
+    label "&nbsp Durée"
+    input {id: "duree", value: ex.duree}
+  }
+  for k, v in pairs ex.args
+    args << html -> {
+      label "&nbsp #{k}"
+      input {id: "'#{k}'", value: v}
+    }
+    val = EL(k)
+    val.element.onchange = ->
+      ex.args[id] = val\value!
+  nombre = EL("nombre")\value
+  duree = EL("duree")\value
+  --]]
+
+maj_args!
+
+exercice.element.onchange = maj_args
 
 bouton.element.onclick = ->
   reponse < ""
+  ex = m[exercice\value!]
   d, n = tonumber(duree!), tonumber(nombre!)
   reponses = {}
   for i = 0, n - 1
-    q, r = m[exercice!] min!, max!
+    q, r = ex[1] ex.args
     insert reponses, {q, r}
     w\setTimeout (-> enonce < q\gsub '\n', '<br>'), 1000 * i * d
   w\setTimeout (-> enonce < "Terminé !"), 1000 * n * d

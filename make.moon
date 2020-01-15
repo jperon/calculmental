@@ -1,4 +1,4 @@
-#!/usr/bin/env moon-jit
+#!/usr/bin/env moon
 
 page = io.open "interface.html"
 contenu = page\read "*a"
