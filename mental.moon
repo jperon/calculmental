@@ -26,7 +26,7 @@ do
 
   m = {
     ["Addition"]:
-      ["Addition"]: {
+      ["Somme"]: {
         args: {
           Min: 10
           Max: 100
@@ -35,16 +35,21 @@ do
         duree: 8
         fn: =>
           min, max, delta = bornes @args
-          a = min + random delta
-          b = min + random delta
-          "#{a} + #{b} = ?", "#{a + b}"
+          r = min + random delta
+          q = "#{r}"
+          print @args["Nbre de termes"]
+          for i = 2, tonumber @args["Nbre de termes"]
+            a = min + random delta
+            q = "#{q} + #{a}"
+            r = r + a
+            print i, q, r
+          "#{q} = ?", "#{r}"
       }
     ["Soustraction"]:
-      ["Soustraction"]: {
+      ["Différence"]: {
         args: {
           Min: 10
           Max: 100
-          ["Nbre de termes"]: 2
         }
         duree: 8
         fn: =>
@@ -60,12 +65,13 @@ do
         }
         duree: 8
         fn: =>
+          @args.Max = @args.Ref
           min, max, delta = bornes @args
           a = min + random delta
           "#{a} + ? \n= #{max}", "#{max - a}"
       }
     ["Multiplication"]:
-      ["Multiplication"]: {
+      ["Produit"]: {
         args: {
           Min: 10
           Max: 100
@@ -289,6 +295,8 @@ bouton.element.onclick = ->
   for _, categorie in pairs m
     for titre, exo in pairs categorie
       duree = tonumber EL("#{titre}_duree")\value!
+      for arg in pairs exo.args
+        exo.args[arg] = EL("#{titre}_#{arg}")\value!
       for n = 1, tonumber EL("#{titre}_nombre")\value!
         insert serie, {
           temps: t * 1000
