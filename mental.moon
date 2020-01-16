@@ -24,108 +24,105 @@ do
     f = floor d
     f if d - f < .5 else f + 1
 
-  m = {}
-
-  m.addition = {
-    args: {
-      Min: 10
-      Max: 100
-      ["Nbre de termes"]: 2
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      a = min + random delta
-      b = min + random delta
-      "#{a} + #{b} = ?", "#{a + b}"
-  }
-
-  m.complement = {
-    args: {
-      Min: 10
-      Max: 100
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      a = min + random delta
-      "#{a} + ? \n= #{max}", "#{max - a}"
-  }
-
-  m.multiplication = {
-    args: {
-      Min: 10
-      Max: 100
-      ["Nbre de termes"]: 2
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      a = min + random delta
-      b = min + random delta
-      "#{a} × #{b} \n= ?", "#{a * b}"
-  }
-
-  m.multiplication_ir = {
-    args: {
-      Min: 10
-      Max: 100
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      c = min + 1 + 10 * random floor delta/10
-      d = random min
-      a = c + d
-      b = c - d
-      "#{a} × #{b} \n= ?", "#{a * b}"
-  }
-
-  m.multiplication_dc = {
-    args: {
-      Min: 10
-      Max: 100
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      c = min + 1 + 10 * random floor delta/10
-      d = random min
-      a = c - min - 1 + d
-      b = c - d
-      "#{a} × #{b} \n= ?", "#{a * b}"
-  }
-
-  m["Ordre de grandeur"] = {
-    args: {
-      Min: 10
-      Max: 100
-      ["Nbre de termes"]: 2
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      a = min + random delta
-      b = min + random delta
-      oa = pow 10, floor log(a, 10)
-      ob = pow 10, floor log(b, 10)
-      ga = oa * round a/oa
-      gb = ob * round b/ob
-      "#{a} × #{b} \n≈ ?", "#{ga} × #{gb} = #{ga * gb}"
-  }
-
-  m.soustraction = {
-    args: {
-      Min: 10
-      Max: 100
-      ["Nbre de termes"]: 2
-    }
-    duree: 8
-    (args) ->
-      min, max, delta = bornes args
-      a = min + random delta
-      b = min + random delta
-      "#{a} - #{b} \n= ?", "#{a - b}"
+  m = {
+    ["Addition"]:
+      ["Addition"]: {
+        args: {
+          Min: 10
+          Max: 100
+          ["Nbre de termes"]: 2
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          a = min + random delta
+          b = min + random delta
+          "#{a} + #{b} = ?", "#{a + b}"
+      }
+    ["Soustraction"]:
+      ["Soustraction"]: {
+        args: {
+          Min: 10
+          Max: 100
+          ["Nbre de termes"]: 2
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          a = min + random delta
+          b = min + random delta
+          "#{a} - #{b} \n= ?", "#{a - b}"
+      }
+      ["Complément"]: {
+        args: {
+          Min: 10
+          Ref: 100
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          a = min + random delta
+          "#{a} + ? \n= #{max}", "#{max - a}"
+      }
+    ["Multiplication"]:
+      ["Multiplication"]: {
+        args: {
+          Min: 10
+          Max: 100
+          ["Nbre de termes"]: 2
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          a = min + random delta
+          b = min + random delta
+          "#{a} × #{b} \n= ?", "#{a * b}"
+      }
+      ["Ordre de grandeur"]: {
+        args: {
+          Min: 10
+          Max: 100
+          ["Nbre de termes"]: 2
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          a = min + random delta
+          b = min + random delta
+          oa = pow 10, floor log(a, 10)
+          ob = pow 10, floor log(b, 10)
+          ga = oa * round a/oa
+          gb = ob * round b/ob
+          "#{a} × #{b} \n≈ ?", "#{ga} × #{gb} = #{ga * gb}"
+      }
+      ["Identités remarquables"]: {
+        args: {
+          Min: 10
+          Max: 100
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          c = min + 1 + 10 * random floor delta/10
+          d = random min
+          a = c + d
+          b = c - d
+          "#{a} × #{b} \n= ?", "#{a * b}"
+      }
+      ["Multiplication astucieuse"]: {
+        args: {
+          Min: 10
+          Max: 100
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          c = min + 1 + 10 * random floor delta/10
+          d = random min
+          a = c - min - 1 + d
+          b = c - d
+          "#{a} × #{b} \n= ?", "#{a * b}"
+      }
   }
 
 
@@ -166,7 +163,7 @@ html = do
 
   do
     attrs = (t) ->
-      a = concat ["#{attr}=#{val}" for attr, val in pairs t], ' '
+      a = concat ["#{attr}='#{val}'" for attr, val in pairs t], ' '
       ' '..a if a != '' else ''
     H.__index = (_, k) ->
       return _G[k] if _G[k] and k != "table" and k != "select"
@@ -225,14 +222,14 @@ class EL
 body = EL "corps"
 body << html -> {
   h1 "Calcul mental"
-  select {
-    id: "exercice"
-    name: "Exercice"
-    concat([(html -> {option {value: "'#{str}'", str}}) for str in pairs m], '')
+  div {
+    id: "exercices"
+    div {
+      id: "liste_exercices"
+    }
+    "&nbsp"
+    button {id: "lancer", "C'est parti !"}
   }
-  span {id: "args"}
-  "&nbsp"
-  button {id: "lancer", "C'est parti !"}
   div {
     id: "question", class: "zone"
     p {id: "enonce"}
@@ -242,48 +239,69 @@ body << html -> {
   }
 }
 
-args = EL "args"
 bouton = EL "lancer"
 enonce = EL "enonce"
+liste_exercices = EL "liste_exercices"
+exercices = EL "exercices"
 reponse = EL "reponse"
-exercice = EL "exercice"
 
-local nombre, duree
-maj_args = -> --[[]]
-  ex = m[exercice\value!]
-  args < html -> {
-    label "&nbsp Nbre"
-    input {id: "nombre", value: 5}
-    label "&nbsp Durée"
-    input {id: "duree", value: ex.duree}
+for categorie, operation in pairs m
+  id = "#{categorie}_table"
+  liste_exercices << html -> {
+    h2 {id: categorie, a {href:"#", categorie}}
+    table {id: id, style:"display:none"}
   }
-  for k, v in pairs ex.args
-    args << html -> {
-      label "&nbsp #{k}"
-      input {id: "'#{k}'", value: v}
+  liste_categorie = EL id
+  for titre, exo in pairs operation
+    liste_categorie << html -> {
+      tr {
+        id: "#{titre}_args"
+        class: "args"
+        td {label {class:"titre", titre}}
+        td {
+          label "&nbsp Nbre"
+          input {id: "#{titre}_nombre", value: 0}
+          label "&nbsp Durée"
+          input {id: "#{titre}_duree", value: exo.duree}
+        }
+      }
     }
-    val = EL(k)
-    val.element.onchange = ->
-      ex.args[id] = val\value!
-  nombre = EL("nombre")\value
-  duree = EL("duree")\value
-  --]]
+    for k, v in pairs exo.args
+      EL("#{titre}_args") << html -> {
+        td{label "&nbsp #{k}"}
+        td{input {id: "#{titre}_#{k}", value: v}}
+      }
+  titre_categorie = EL categorie
+  titre_categorie.element.onclick = ->
+    print liste_categorie.element.style.visibility
+    if liste_categorie.element.style.display == "none"
+      liste_categorie.element.style.display = "block"
+    else
+      liste_categorie.element.style.display = "none"
 
-maj_args!
-
-exercice.element.onchange = maj_args
 
 bouton.element.onclick = ->
+  enonce < "Prêt ?"
+  exercices.element.style.visibility = "hidden"
   reponse < ""
-  ex = m[exercice\value!]
-  d, n = tonumber(duree!), tonumber(nombre!)
+  serie = {}
+  t = 3
+  for _, categorie in pairs m
+    for titre, exo in pairs categorie
+      duree = tonumber EL("#{titre}_duree")\value!
+      for n = 1, tonumber EL("#{titre}_nombre")\value!
+        insert serie, {
+          temps: t * 1000
+          fn: exo\fn
+        }
+        t = t + duree
   reponses = {}
-  for i = 0, n - 1
-    q, r = ex[1] ex.args
+  for {:temps, :fn} in *serie
+    q, r = fn!
     insert reponses, {q, r}
-    w\setTimeout (-> enonce < q\gsub '\n', '<br>'), 1000 * i * d
-  w\setTimeout (-> enonce < "Terminé !"), 1000 * n * d
+    w\setTimeout (-> enonce < q\gsub '\n', '<br>'), temps
+  w\setTimeout (-> enonce < "Terminé !"), 1000 * t
   w\setTimeout (->
     enonce < ""
     reponse < concat [r[1]\gsub("?", html -> {span{r[2], class:"resultat"}}) for r in *reponses], "<br>"
-  ), 1000 * (n + 1) * d
+  ), 1000 * (t + 3)
