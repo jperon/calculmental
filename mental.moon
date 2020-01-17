@@ -14,7 +14,7 @@ do
     min = tonumber(args.Min or MIN) - 1
     max = tonumber(args.Max or 10 * min)
     min, max = max, min if min > max
-    min, max, max - min
+    min, max, max - min, args.Relatifs
 
   pow = (a, n) ->
     switch n
@@ -33,19 +33,22 @@ do
           Min: 10
           Max: 100
           ["Nbre de termes"]: 2
+          Relatifs: false
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
+          min, max, delta, relatifs = bornes @args
           r = min + random delta
+          r = (r * pow -1, random 2) if relatifs
           q = "#{r}"
           for i = 2, tonumber @args["Nbre de termes"]
             a = min + random delta
-            q = "#{q} + #{a}"
+            a = (a * pow -1, random 2) if relatifs
+            q = "#{q} + " .. (a < 0 and "(#{a})" or "#{a}")
             r = r + a
           "#{q}\n= ?", "#{r}"
       }
-      ["Somme de relatifs"]: {
+      ["Additions et soustractions"]: {
         args: {
           Min: 10
           Max: 100
@@ -82,8 +85,7 @@ do
         }
         duree: 8
         fn: =>
-          @args.Max = @args.Ref
-          min, max, delta = bornes @args
+          min, max, delta = bornes {Min: @args.Min, Max: @args.Max}
           a = min + random delta
           "#{a} + ?\n= #{max}", "#{max - a}"
       }
@@ -180,8 +182,8 @@ do
 
 import concat, insert, remove from table
 js = require "js"
-global: w, global: {:document, :WebSocket} = js
-gbId = document\getElementById
+global: w, global: {document: doc} = js
+gbId = doc\getElementById
 
 
 html = do
@@ -248,19 +250,22 @@ html = do
 
 class EL
   -- Objet représentant un élément de la page web
-  new: (id) =>
-    @element = gbId id
+  new: (id, tp) =>
+    @el = gbId id
+    unless @el
+      @el = doc\createElement tp
+      @el.setAttribute 'id', id
 
   append: (h, place) =>
-    @element\insertAdjacentHTML place or "beforeEnd", h
+    @el\insertAdjacentHTML place or "beforeEnd", h
     self
 
   replace: (h) =>
-    @element.innerHTML = h
+    @el.innerHTML = h
     self
 
   value: =>
-    self.element.value
+    self.el.value
 
   __lt: (h) => @replace h
 
@@ -325,25 +330,30 @@ for categorie, operation in pairs m
     for k, v in pairs exo.args
       EL("#{titre}_args") << html -> {
         td{label "&nbsp #{k}"}
-        td{input {id: "#{titre}_#{k}", value: v}}
+        if type(v) == "boolean"
+          td{input {id: "#{titre}_#{k}", type:"checkbox"}}
+        else
+          td{input {id: "#{titre}_#{k}", value: v}}
       }
   titre_categorie = EL categorie
-  titre_categorie.element.onclick = ->
-    if liste_categorie.element.style.display == "none"
-      liste_categorie.element.style.display = "block"
+  titre_categorie.el.onclick = ->
+    if liste_categorie.el.style.display == "none"
+      liste_categorie.el.style.display = "block"
     else
-      liste_categorie.element.style.display = "none"
+      liste_categorie.el.style.display = "none"
 
-
-EL("titre").element.onclick = ->
+EL("titre").el.onclick = ->
   enonce < ""
   reponse < ""
-  exercices.element.style.visibility = "visible"
+  enonce.el.style.display = "none"
+  reponse.el.style.display = "none"
+  exercices.el.style.visibility = "visible"
 
-bouton.element.onclick = ->
+bouton.el.onclick = ->
+  enonce.el.style.display = "block"
+  reponse.el.style.display = "block"
+  exercices.el.style.visibility = "hidden"
   enonce < "Prêt ?"
-  exercices.element.style.visibility = "hidden"
-  reponse < ""
   serie = {}
   t = 4
   chrono t - 1, 1
@@ -351,8 +361,11 @@ bouton.element.onclick = ->
     for titre, exo in pairs categorie
       duree = tonumber EL("#{titre}_duree")\value!
       nombre = tonumber EL("#{titre}_nombre")\value!
-      for arg in pairs exo.args
-        exo.args[arg] = EL("#{titre}_#{arg}")\value!
+      continue if nombre < 1
+      for arg, val in pairs exo.args
+        f = EL("#{titre}_#{arg}").el
+        val = f.checked or (f.value != "on" and f.value)
+        exo.args[arg] = val
       for n = 1, nombre
         insert serie, {
           fn: exo\fn
@@ -363,11 +376,11 @@ bouton.element.onclick = ->
         t = t + duree
   reponses = {}
   for {:fn, :temps, :duree, :n_termes} in *serie
-    enonce.element.style["font-size"] = "#{1800/math.sqrt(n_termes)}%"
+    enonce.el.style["font-size"] = "#{1400/math.sqrt(n_termes)}%"
     q, r = fn!
     insert reponses, {q, r}
     w\setTimeout (->
-      enonce < q\gsub '\n', '<br>'
+      w.katex\render q\gsub('\n', [[\\]]), enonce.el, {throwOnError: false}
       chrono duree
     ), 1000 * temps
   w\setTimeout (->
@@ -376,5 +389,5 @@ bouton.element.onclick = ->
   ), 1000 * t
   w\setTimeout (->
     enonce < ""
-    reponse < concat [r[1]\gsub("?", html -> {span{r[2], class:"resultat"}}) for r in *reponses], "<br>"
+    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{#{r[2]}}") for r in *reponses], "<br>"
   ), 1000 * (t + 3)
