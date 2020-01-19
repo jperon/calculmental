@@ -5,7 +5,7 @@ math = require "math"
 
 local m
 do
-  import floor, log, random, randomseed from math
+  import abs, floor, log, random, randomseed from math
 
   MIN = 100
   randomseed(time!)
@@ -17,14 +17,17 @@ do
     min, max, max - min, args.Relatifs
 
   pow = (a, n) ->
-    switch n
-      when 0 1
-      when 1 a
-      else pow a*a, n/2 if n % 2 == 0 else a * pow a*a, (n-1)/2
+    return 1 if n == 0
+    return a if n == 1
+    pow a*a, n/2 if n % 2 == 0 else a * pow a*a, (n-1)/2
 
   round = (d) ->
     f = floor d
     f if d - f < .5 else f + 1
+
+  tirer = (min, delta, relatifs, sansparentheses) ->
+    r = (min + random delta) * (relatifs and (pow -1, random 2) or 1)
+    r, (sansparentheses or r > 0) and "#{r}" or "(#{r})"
 
   m = {
     ["Addition"]:
@@ -38,13 +41,10 @@ do
         duree: 8
         fn: =>
           min, max, delta, relatifs = bornes @args
-          r = min + random delta
-          r = (r * pow -1, random 2) if relatifs
-          q = "#{r}"
+          r, q = tirer min, delta, relatifs, true
           for i = 2, tonumber @args["Nbre de termes"]
-            a = min + random delta
-            a = (a * pow -1, random 2) if relatifs
-            q = "#{q} + " .. (a < 0 and "(#{a})" or "#{a}")
+            a, s = tirer min, delta, relatifs
+            q = "#{q} + #{s}"
             r = r + a
           "#{q}\n= ?", "#{r}"
       }
@@ -53,16 +53,19 @@ do
           Min: 10
           Max: 100
           ["Nbre de termes"]: 2
+          Relatifs: false
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          r = (min + random delta) * pow -1, random 2
-          q = "#{r}"
-          for i = 2, tonumber @args["Nbre de termes"]
-            a = (min + random delta) * pow -1, random 2
-            q = q .. (a < 0 and " - #{-a}" or " + #{a}")
-            r = r + a
+          n_termes = tonumber @args["Nbre de termes"]
+          min, max, delta, relatifs = bornes @args
+          r, q = tirer min, delta, relatifs, true
+          for i = 2, n_termes
+            min, delta = -r, (max + r > 1 and max + r or 2) if not relatifs and i == n_termes and r < 0 and -r > min
+            a, s = tirer min, delta, relatifs
+            soustraction = (relatifs or (r + a > -max and i < n_termes) or r - a > 0) and pow(-1, random 2) == -1
+            q = q .. (soustraction and " - #{s}" or " + #{s}")
+            r = r + (soustraction and -a or a)
           "#{q}\n= ?", "#{r}"
       }
     ["Soustraction"]:
@@ -70,13 +73,15 @@ do
         args: {
           Min: 10
           Max: 100
+          Relatifs: false
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          a = min + random delta
-          b = min + random delta
-          "#{a} - #{b}\n= ?", "#{a - b}"
+          min, max, delta, relatifs = bornes @args
+          a, q = tirer min, delta, relatifs, true
+          delta = a - min if not relatifs and max > a
+          b, s = tirer min, delta, relatifs
+          "#{q} - #{s}\n= ?", "#{a - b}"
       }
       ["Complément"]: {
         args: {
@@ -95,32 +100,15 @@ do
           Min: 10
           Max: 100
           ["Nbre de termes"]: 2
+          Relatifs: false
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          r = min + random delta
-          q = "#{r}"
+          min, max, delta, relatifs = bornes @args
+          r, q = tirer min, delta, relatifs, true
           for i = 2, tonumber @args["Nbre de termes"]
-            a = min + random delta
-            q = "#{q} × #{a}"
-            r = r * a
-          "#{q}\n= ?", "#{r}"
-      }
-      ["Produit de relatifs"]: {
-        args: {
-          Min: 10
-          Max: 100
-          ["Nbre de termes"]: 2
-        }
-        duree: 8
-        fn: =>
-          min, max, delta = bornes @args
-          r = (min + random delta) * pow -1, random 2
-          q = "#{r}"
-          for i = 2, tonumber @args["Nbre de termes"]
-            a = (min + random delta) * pow -1, random 2
-            q = "#{q} × " .. (a < 0 and "(#{a})" or a)
+            a, s = tirer min, delta, relatifs
+            q = "#{q} × #{s}"
             r = r * a
           "#{q}\n= ?", "#{r}"
       }
@@ -129,22 +117,22 @@ do
           Min: 10
           Max: 100
           ["Nbre de termes"]: 2
+          Relatifs: false
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          r = min + random delta
-          q = "#{r}"
-          o = pow 10, floor log(r, 10)
+          min, max, delta, relatifs = bornes @args
+          r, q = tirer min, delta, relatifs, true
+          o = pow 10, floor log abs(r), 10
           r = o * round r/o
           rs = "#{r}"
           for i = 2, tonumber @args["Nbre de termes"]
-            a = min + random delta
-            q = "#{q} × #{a}"
-            o = pow 10, floor log(a, 10)
+            a, s = tirer min, delta, relatifs
+            q = "#{q} × #{s}"
+            o = pow 10, floor log abs(a), 10
             a = o * round a/o
             r = r * a
-            rs = "#{rs} × #{a}"
+            rs = "#{rs} × " .. (a > 0 and "#{a}" or "(#{a})")
           "#{q}\n≈ ?", "#{rs} = #{r}"
       }
       ["Identités remarquables"]: {
@@ -376,7 +364,7 @@ bouton.el.onclick = ->
         t = t + duree
   reponses = {}
   for {:fn, :temps, :duree, :n_termes} in *serie
-    enonce.el.style["font-size"] = "#{1400/math.sqrt(n_termes)}%"
+    enonce.el.style["font-size"] = "#{1250/math.sqrt(n_termes)}%"
     q, r = fn!
     insert reponses, {q, r}
     w\setTimeout (->
