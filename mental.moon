@@ -8,7 +8,7 @@ randomseed(time!)
 local m
 do
   MIN = 100
-  import abs, floor, log from math
+  import abs, ceil, floor, log from math
 
   pow = (a, n) ->
     return 1 if n == 0
@@ -144,48 +144,71 @@ do
       }
       ["Identités remarquables"]: {
         args: {
-          Min: 10
-          Max: 100
+          a: 100
+          b: 10
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          c = min + 1 + 10 * random floor delta/10
+          min, max, delta = bornes {Min:@args.b, Max:@args.a}
+          ordre_max = pow(10, floor (log(max, 10) - 1))
+          c = ordre_max * random ceil(max/ordre_max)
           d = random min
           a = c + d
           b = c - d
-          "#{a} × #{b} \n= ?", "#{a * b}"
+          "#{a} × #{b} \n= ?", "#{c}^2 - #{d}^2 = #{a * b}"
       }
       ["Multiplication astucieuse"]: {
         args: {
-          Min: 10
-          Max: 100
+          Base: 100
+          ["Différence"]: 10
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
-          c = min + 1 + 10 * random floor delta/10
-          d = random min
-          a = c - min - 1 + d
-          b = c - d
-          "#{a} × #{b} \n= ?", "#{a * b}"
+          min, max, delta = bornes {Min:@args["Différence"], Max:@args.Base}
+          ordre_max = pow(10, floor log(max, 10))
+          ordre_min = pow(10, floor log(min, 10))
+          c = ordre_max * random(max/ordre_max * ceil(delta/ordre_max/10))
+          diff = ordre_min * random ceil(min/ordre_min)
+          d = random (diff - 1)
+          a = c + d
+          b = c - d + diff
+          "#{a} × #{b} \n= ?", "#{c} \\times #{c + diff} + #{d} \\times #{diff - d} = #{a * b}"
       }
     ["Division"]:
       ["Quotient"]: {
         args: {
           Min: 2
-          Max: 20
+          Max: 400
           Relatifs: false
           ["Décimales"]: 0
         }
         duree: 8
         fn: =>
           min, max, delta, relatifs, div = bornes @args
-          d = tirer min, delta, relatifs, div, true
+          d = tirer min, ceil(2 * sqrt delta), relatifs, div, true
+          delta = floor(max/d) - min
+          delta = 2 if delta < 1
           n = d * tirer min, delta, relatifs, div, true
           "\\frac{%f}{%f}\n= ?"\format(n, d), "%f"\format(n / d)
       }
-
+      ["Division astucieuse"]: {
+        args: {
+          Min: 10
+          Max: 1000
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          d = min + random floor sqrt delta
+          delta = floor(max / d) - min
+          dn = delta < 20 and 1 or floor(delta/10)
+          dd = delta < 70 and 6 or floor(delta/10)
+          na = d * 10 * random dn
+          ns = pow(-1, random 2)
+          nb = d * random dd
+          n = na + ns * nb
+          "\\frac{%f}{%f} \n= ?"\format(n, d), "\\frac{%f %s %f}{%d} = %f"\format(na, ns == 1 and "+" or "-", nb, d, n/d)
+      }
   }
 
 
@@ -370,8 +393,8 @@ bouton.el.onclick = ->
   chrono t - 1, 1
   for _, categorie in pairs m
     for titre, exo in pairs categorie
-      duree = tonumber EL("#{titre}_duree")\value!
-      nombre = tonumber EL("#{titre}_nombre")\value!
+      duree = tonumber(EL("#{titre}_duree")\value!) or 0
+      nombre = tonumber(EL("#{titre}_nombre")\value!) or 0
       continue if nombre < 1
       for arg, val in pairs exo.args
         f = EL("#{titre}_#{arg}").el
@@ -400,5 +423,5 @@ bouton.el.onclick = ->
   ), 1000 * t
   w\setTimeout (->
     enonce < ""
-    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{#{r[2]}}") for r in *reponses], "<br>"
+    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(#{r[2]}\\)}") for r in *reponses], "<br>"
   ), 1000 * (t + 3)
