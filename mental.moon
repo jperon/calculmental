@@ -1,20 +1,14 @@
 import time from os
 math = require "math"
+import random, randomseed, sqrt from math
+randomseed(time!)
 
 --------------------- Calcul des énoncés --------------------
 
 local m
 do
-  import abs, floor, log, random, randomseed from math
-
   MIN = 100
-  randomseed(time!)
-
-  bornes = (args) ->
-    min = tonumber(args.Min or MIN) - 1
-    max = tonumber(args.Max or 10 * min)
-    min, max = max, min if min > max
-    min, max, max - min, args.Relatifs
+  import abs, floor, log from math
 
   pow = (a, n) ->
     return 1 if n == 0
@@ -25,9 +19,17 @@ do
     f = floor d
     f if d - f < .5 else f + 1
 
-  tirer = (min, delta, relatifs, sansparentheses) ->
-    r = (min + random delta) * (relatifs and (pow -1, random 2) or 1)
-    r, (sansparentheses or r > 0) and "#{r}" or "(#{r})"
+  bornes = (args) ->
+    div = pow 10, tonumber(args["Décimales"]) or 0
+    min = div * tonumber(args.Min or MIN) - 1
+    max = div * (tonumber(args.Max) or 10 * min)
+    min, max = max, min if min > max
+    min, max, max - min, args.Relatifs, div
+
+  tirer = (min, delta, relatifs, div, sansparentheses) ->
+    div = div or 1
+    r = (min + random delta) * (relatifs and (pow -1, random 2) or 1) / div
+    r, ((sansparentheses or r > 0) and "%f" or "(%f)")\format r
 
   m = {
     ["Addition"]:
@@ -37,13 +39,14 @@ do
           Max: 100
           ["Nbre de termes"]: 2
           Relatifs: false
+          ["Décimales"]: 0
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs = bornes @args
-          r, q = tirer min, delta, relatifs, true
+          min, max, delta, relatifs, div = bornes @args
+          r, q = tirer min, delta, relatifs, div, true
           for i = 2, tonumber @args["Nbre de termes"]
-            a, s = tirer min, delta, relatifs
+            a, s = tirer min, delta, relatifs, div
             q = "#{q} + #{s}"
             r = r + a
           "#{q}\n= ?", "#{r}"
@@ -54,15 +57,16 @@ do
           Max: 100
           ["Nbre de termes"]: 2
           Relatifs: false
+          ["Décimales"]: 0
         }
         duree: 8
         fn: =>
           n_termes = tonumber @args["Nbre de termes"]
-          min, max, delta, relatifs = bornes @args
-          r, q = tirer min, delta, relatifs, true
+          min, max, delta, relatifs, div = bornes @args
+          r, q = tirer min, delta, relatifs, div, true
           for i = 2, n_termes
             min, delta = -r, (max + r > 1 and max + r or 2) if not relatifs and i == n_termes and r < 0 and -r > min
-            a, s = tirer min, delta, relatifs
+            a, s = tirer min, delta, relatifs, div
             soustraction = (relatifs or (r + a > -max and i < n_termes) or r - a > 0) and pow(-1, random 2) == -1
             q = q .. (soustraction and " - #{s}" or " + #{s}")
             r = r + (soustraction and -a or a)
@@ -74,13 +78,14 @@ do
           Min: 10
           Max: 100
           Relatifs: false
+          ["Décimales"]: 0
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs = bornes @args
-          a, q = tirer min, delta, relatifs, true
+          min, max, delta, relatifs, div = bornes @args
+          a, q = tirer min, delta, relatifs, div, true
           delta = a - min if not relatifs and max > a
-          b, s = tirer min, delta, relatifs
+          b, s = tirer min, delta, relatifs, div
           "#{q} - #{s}\n= ?", "#{a - b}"
       }
       ["Complément"]: {
@@ -90,7 +95,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes {Min: @args.Min, Max: @args.Max}
+          min, max, delta = bornes {Min: @args.Min, Max: @args.Ref}
           a = min + random delta
           "#{a} + ?\n= #{max}", "#{max - a}"
       }
@@ -101,16 +106,17 @@ do
           Max: 100
           ["Nbre de termes"]: 2
           Relatifs: false
+          ["Décimales"]: 0
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs = bornes @args
-          r, q = tirer min, delta, relatifs, true
+          min, max, delta, relatifs, div = bornes @args
+          r, q = tirer min, delta, relatifs, div, true
           for i = 2, tonumber @args["Nbre de termes"]
-            a, s = tirer min, delta, relatifs
+            a, s = tirer min, delta, relatifs, div
             q = "#{q} × #{s}"
             r = r * a
-          "#{q}\n= ?", "#{r}"
+          "#{q}\n= ?", "%f"\format r
       }
       ["Ordre de grandeur"]: {
         args: {
@@ -118,16 +124,17 @@ do
           Max: 100
           ["Nbre de termes"]: 2
           Relatifs: false
+          ["Décimales"]: 0
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs = bornes @args
-          r, q = tirer min, delta, relatifs, true
+          min, max, delta, relatifs, div = bornes @args
+          r, q = tirer min, delta, relatifs, div, true
           o = pow 10, floor log abs(r), 10
           r = o * round r/o
           rs = "#{r}"
           for i = 2, tonumber @args["Nbre de termes"]
-            a, s = tirer min, delta, relatifs
+            a, s = tirer min, delta, relatifs, div
             q = "#{q} × #{s}"
             o = pow 10, floor log abs(a), 10
             a = o * round a/o
@@ -163,6 +170,22 @@ do
           b = c - d
           "#{a} × #{b} \n= ?", "#{a * b}"
       }
+    ["Division"]:
+      ["Quotient"]: {
+        args: {
+          Min: 2
+          Max: 20
+          Relatifs: false
+          ["Décimales"]: 0
+        }
+        duree: 8
+        fn: =>
+          min, max, delta, relatifs, div = bornes @args
+          d = tirer min, delta, relatifs, div, true
+          n = d * tirer min, delta, relatifs, div, true
+          "\\frac{%f}{%f}\n= ?"\format(n, d), "%f"\format(n / d)
+      }
+
   }
 
 
@@ -357,20 +380,20 @@ bouton.el.onclick = ->
       for n = 1, nombre
         insert serie, {
           fn: exo\fn
-          temps: t
           duree: duree
           n_termes: exo.args["Nbre de termes"] or 2
         }
-        t = t + duree
   reponses = {}
-  for {:fn, :temps, :duree, :n_termes} in *serie
-    enonce.el.style["font-size"] = "#{1250/math.sqrt(n_termes)}%"
+  while #serie > 0
+    {:fn, :duree, :n_termes} = remove serie, random #serie
+    enonce.el.style["font-size"] = "#{1250/sqrt(n_termes)}%"
     q, r = fn!
     insert reponses, {q, r}
     w\setTimeout (->
       w.katex\render q\gsub('\n', [[\\]]), enonce.el, {throwOnError: false}
       chrono duree
-    ), 1000 * temps
+    ), 1000 * t
+    t = t + duree
   w\setTimeout (->
     enonce < "Terminé !"
     chr < ""
