@@ -15,9 +15,11 @@ do
     return a if n == 1
     pow a*a, n/2 if n % 2 == 0 else a * pow a*a, (n-1)/2
 
-  round = (d) ->
+  round = (d, decimales) ->
+    div = pow 10, (decimales or 0)
+    d = d * div
     f = floor d
-    f if d - f < .5 else f + 1
+    f / div if d - f < .5 else (f + 1) / div
 
   bornes = (args) ->
     div = pow 10, tonumber(args["Décimales"]) or 0
@@ -116,7 +118,7 @@ do
             a, s = tirer min, delta, relatifs, div
             q = "#{q} × #{s}"
             r = r * a
-          "#{q}\n= ?", "%f"\format r
+          "#{q}\n= ?", "%f"\format round r, 2
       }
       ["Ordre de grandeur"]: {
         args: {
