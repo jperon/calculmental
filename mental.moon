@@ -118,7 +118,7 @@ do
             a, s = tirer min, delta, relatifs, div
             q = "#{q} × #{s}"
             r = r * a
-          "#{q}\n= ?", "%f"\format round r, 2
+          "#{q}\n= ?", "%f"\format round r, 2 * tonumber @args["Décimales"]
       }
       ["Ordre de grandeur"]: {
         args: {
@@ -191,7 +191,9 @@ do
           delta = floor(max/d) - min
           delta = 2 if delta < 1
           n = d * tirer min, delta, relatifs, div, true
-          "\\frac{%f}{%f}\n= ?"\format(n, d), "%f"\format(n / d)
+          decimales = 2 * tonumber @args["Décimales"]
+          n, d = round(n, decimales), round(d, decimales)
+          "\\frac{%f}{%f}\n= ?"\format(n, d), "%f"\format(round(n / d, decimales))
       }
       ["Division astucieuse"]: {
         args: {
@@ -216,7 +218,6 @@ do
 
 ----------------------- DOM -----------------------------------
 
-import concat, insert, remove from table
 js = require "js"
 global: w, global: {document: doc} = js
 gbId = doc\getElementById
