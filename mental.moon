@@ -1,4 +1,5 @@
 import time from os
+import concat, insert, remove from table
 math = require "math"
 import random, randomseed, sqrt from math
 randomseed(time!)
@@ -32,6 +33,50 @@ do
     div = div or 1
     r = (min + random delta) * (relatifs and (pow -1, random 2) or 1) / div
     r, ((sansparentheses or r > 0) and "%f" or "(%f)")\format r
+
+  premiers = {2, 3, 5, 7}
+  premiers.__index = (t, k) ->
+    n = t[k - 1] + 2
+    est_premier = false
+    while not est_premier
+      est_premier = true
+      for d in *t
+        if n % d == 0
+          est_premier = false
+          n += 2
+          break
+    insert t, n
+    n
+  premiers.__call = (t, par) ->
+    i = 0
+    local max, lim
+    if type(par) == "table"
+      {:lim, :max} = par
+    else
+      lim = par
+    lim += 1 if lim
+    ->
+      i += 1
+      if lim and i < lim or max and t[i] < max
+        t[i]
+  setmetatable premiers, premiers
+
+  facteurs = (n) ->
+    r = floor sqrt n
+    fn = premiers{max:r}
+    d = fn!
+    local fini
+    ->
+      return if fini
+      while d and d < r
+        return if n == 1
+        if n % d == 0
+          n = n / d
+          return d
+        else
+          d = fn!
+      fini = true
+      floor n
 
   m = {
     ["Addition"]:
@@ -212,6 +257,30 @@ do
           nb = d * random dd
           n = na + ns * nb
           "\\frac{%f}{%f} \n= ?"\format(n, d), "\\frac{%f %s %f}{%d} = %f"\format(na, ns == 1 and "+" or "-", nb, d, n/d)
+      }
+      ["Division euclidienne"]: {
+        args: {
+          Min: 2
+          Max: 200
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          d = tirer min, ceil(2 * sqrt delta)
+          n = tirer d, max - d
+          "%f = %f × ?"\format(n, d), "%f + %f"\format(floor(n / d), n % d)
+      }
+    ["Arithmétique"]:
+      ["Décomposition en facteurs premiers"]: {
+        args: {
+          Min: 2
+          Max: 200
+        }
+        duree: 8
+        fn: =>
+          min, max, delta = bornes @args
+          n = floor tirer min, delta
+          "#{n} = ?", concat [d for d in facteurs n], ' × '
       }
   }
 
