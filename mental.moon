@@ -96,13 +96,14 @@ do
             a, s = tirer min, delta, relatifs, div
             q = "#{q} + #{s}"
             r = r + a
-          "#{q}\n= ?", "#{r}"
+          "#{q}\n= ?", ->
+            "%f"\format r
       }
       ["Additions et soustractions"]: {
         args: {
           Min: 10
           Max: 100
-          ["Nbre de termes"]: 2
+          ["Nbre de termes"]: 3
           Relatifs: false
           ["Décimales"]: 0
         }
@@ -117,7 +118,8 @@ do
             soustraction = (relatifs or (r + a > -max and i < n_termes) or r - a > 0) and pow(-1, random 2) == -1
             q = q .. (soustraction and " - #{s}" or " + #{s}")
             r = r + (soustraction and -a or a)
-          "#{q}\n= ?", "#{r}"
+          "#{q}\n= ?", ->
+            "%f"\format r
       }
     ["Soustraction"]:
       ["Différence"]: {
@@ -133,7 +135,8 @@ do
           a, q = tirer min, delta, relatifs, div, true
           delta = a - min if not relatifs and max > a
           b, s = tirer min, delta, relatifs, div
-          "#{q} - #{s}\n= ?", "#{a - b}"
+          "#{q} - #{s}\n= ?", ->
+            "%f"\format a - b
       }
       ["Complément"]: {
         args: {
@@ -144,7 +147,8 @@ do
         fn: =>
           min, max, delta = bornes {Min: @args.Min, Max: @args.Ref}
           a = min + random delta
-          "#{a} + ?\n= #{max}", "#{max - a}"
+          "#{a} + ?\n= #{max}", ->
+            "%f"\format max - a
       }
     ["Multiplication"]:
       ["Produit"]: {
@@ -163,7 +167,8 @@ do
             a, s = tirer min, delta, relatifs, div
             q = "#{q} × #{s}"
             r = r * a
-          "#{q}\n= ?", "%f"\format round r, 2 * tonumber @args["Décimales"]
+          "#{q}\n= ?", ->
+            "%f"\format round r, 2 * tonumber @args["Décimales"]
       }
       ["Ordre de grandeur"]: {
         args: {
@@ -179,15 +184,16 @@ do
           r, q = tirer min, delta, relatifs, div, true
           o = pow 10, floor log abs(r), 10
           r = o * round r/o
-          rs = "#{r}"
+          rs = "%f"\format r
           for i = 2, tonumber @args["Nbre de termes"]
             a, s = tirer min, delta, relatifs, div
-            q = "#{q} × #{s}"
+            q = "%f × %f"\format q, s
             o = pow 10, floor log abs(a), 10
             a = o * round a/o
             r = r * a
-            rs = "#{rs} × " .. (a > 0 and "#{a}" or "(#{a})")
-          "#{q}\n≈ ?", "#{rs} = #{r}"
+            rs = "#{rs} × " .. (a > 0 and "%f" or "(%f)")\format a
+          "#{q}\n≈ ?", ->
+            "#{rs} = %f"\format r
       }
       ["Identités remarquables"]: {
         args: {
@@ -202,7 +208,8 @@ do
           d = random min
           a = c + d
           b = c - d
-          "#{a} × #{b} \n= ?", "#{c}^2 - #{d}^2 = #{a * b}"
+          "#{a} × #{b} \n= ?", ->
+            "#{c}^2 - #{d}^2 = #{a * b}"
       }
       ["Multiplication astucieuse"]: {
         args: {
@@ -214,12 +221,15 @@ do
           min, max, delta = bornes {Min:@args["Différence"], Max:@args.Base}
           ordre_max = pow(10, floor log(max, 10))
           ordre_min = pow(10, floor log(min, 10))
-          c = ordre_max * random(max/ordre_max * ceil(delta/ordre_max/10))
+          delta_max = max/ordre_max * ceil(delta/ordre_max/10)
+          ordre_max, delta_max = ordre_max/10, delta_max * 10 if delta_max < 3
+          c = floor ordre_max * random(delta_max)
           diff = ordre_min * random ceil(min/ordre_min)
-          d = random (diff - 1)
-          a = c + d
-          b = c - d + diff
-          "#{a} × #{b} \n= ?", "#{c} \\times #{c + diff} + #{d} \\times #{diff - d} = #{a * b}"
+          d = floor random diff
+          a = floor c + d
+          b = floor c - d + diff
+          "#{a} × #{b} \n= ?", ->
+            "#{c} \\times #{c + diff} + #{d} \\times #{diff - d} = #{a * b}"
       }
     ["Division"]:
       ["Quotient"]: {
@@ -238,7 +248,8 @@ do
           n = d * tirer min, delta, relatifs, div, true
           decimales = 2 * tonumber @args["Décimales"]
           n, d = round(n, decimales), round(d, decimales)
-          "\\frac{%f}{%f}\n= ?"\format(n, d), "%f"\format(round(n / d, decimales))
+          "\\frac{%f}{%f}\n= ?"\format(n, d), ->
+            "%f"\format round(n / d, decimales)
       }
       ["Division astucieuse"]: {
         args: {
@@ -251,12 +262,13 @@ do
           d = min + random floor sqrt delta
           delta = floor(max / d) - min
           dn = delta < 20 and 1 or floor(delta/10)
-          dd = delta < 70 and 6 or floor(delta/10)
+          dd = delta < 70 and 3 or floor(delta/20)
           na = d * 10 * random dn
           ns = pow(-1, random 2)
           nb = d * random dd
           n = na + ns * nb
-          "\\frac{%f}{%f} \n= ?"\format(n, d), "\\frac{%f %s %f}{%d} = %f"\format(na, ns == 1 and "+" or "-", nb, d, n/d)
+          "\\frac{%f}{%f} \n= ?"\format(n, d), ->
+            "\\frac{%f %s %f}{%d} = %f"\format na, ns == 1 and "+" or "-", nb, d, n/d
       }
       ["Division euclidienne"]: {
         args: {
@@ -268,7 +280,8 @@ do
           min, max, delta = bornes @args
           d = tirer min, ceil(2 * sqrt delta)
           n = tirer d, max - d
-          "%f = %f × ?"\format(n, d), "%f + %f"\format(floor(n / d), n % d)
+          "%f = %f × ? + ?"\format(n, d), ->
+            floor(n / d), floor n % d
       }
     ["Arithmétique"]:
       ["Décomposition en facteurs premiers"]: {
@@ -280,7 +293,8 @@ do
         fn: =>
           min, max, delta = bornes @args
           n = floor tirer min, delta
-          "#{n} = ?", concat [d for d in facteurs n], ' × '
+          "#{n} = ?", ->
+            concat [d for d in facteurs n], ' × '
       }
   }
 
@@ -495,5 +509,7 @@ bouton.el.onclick = ->
   ), 1000 * t
   w\setTimeout (->
     enonce < ""
-    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(#{r[2]}\\)}") for r in *reponses], "<br>"
+    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(%%s\\)}")\format(
+        r[2]!
+      ) for r in *reponses], "<br>"
   ), 1000 * (t + 3)
