@@ -57,7 +57,7 @@ do
     lim += 1 if lim
     ->
       i += 1
-      if lim and i < lim or max and t[i] < max
+      if lim and i < lim or max and t[i] <= max
         t[i]
   setmetatable premiers, premiers
 
@@ -68,7 +68,7 @@ do
     local fini
     ->
       return if fini
-      while d and d < r
+      while d and d <= r
         return if n == 1
         if n % d == 0
           n = n / d
