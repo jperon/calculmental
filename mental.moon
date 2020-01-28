@@ -306,7 +306,8 @@ global: w, global: {document: doc} = js
 gbId = doc\getElementById
 
 
-html = do
+local html
+do
   _G = _G
   H = {}
   setfenv = setfenv or (fn, env) ->
@@ -365,7 +366,6 @@ html = do
       H[k] = r
       H[k]
     setmetatable H, H
-  html
 
 
 class EL
