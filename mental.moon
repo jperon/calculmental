@@ -400,6 +400,12 @@ body << html -> {
   div {
     id: "exercices"
     div {
+      label "Délai avant de commencer"
+      input {id: "attente", class: "args", value: 3}
+      label "&nbsp Correction à la fin"
+      input {id: "correction_fin", type: "checkbox", checked: true}
+    }
+    div {
       id: "liste_exercices"
     }
     "&nbsp"
@@ -475,7 +481,7 @@ bouton.el.onclick = ->
   exercices.el.style.visibility = "hidden"
   enonce < "Prêt ?"
   serie = {}
-  t = 4
+  t = EL("attente")\value!
   chrono t - 1, 1
   for _, categorie in pairs m
     for titre, exo in pairs categorie
@@ -507,9 +513,11 @@ bouton.el.onclick = ->
     enonce < "Terminé !"
     chr < ""
   ), 1000 * t
-  w\setTimeout (->
-    enonce < ""
-    reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(%%s\\)}")\format(
-        r[2]!
-      ) for r in *reponses], "<br>"
-  ), 1000 * (t + 3)
+  correction = EL("correction_fin").el
+  if correction.checked or (correction.value != "on" and correction.value)
+    w\setTimeout (->
+      enonce < ""
+      reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(%%s\\)}")\format(
+          r[2]!
+        ) for r in *reponses], "<br>"
+    ), 1000 * (t + 3)
