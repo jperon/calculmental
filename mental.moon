@@ -187,7 +187,7 @@ do
           rs = "%f"\format r
           for i = 2, tonumber @args["Nbre de termes"]
             a, s = tirer min, delta, relatifs, div
-            q = "%f × %f"\format q, s
+            q = "%s × %s"\format q, s
             o = pow 10, floor log abs(a), 10
             a = o * round a/o
             r = r * a
