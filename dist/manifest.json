@@ -1,0 +1,16 @@
+{
+  "name": "Calcul mental",
+  "short_name": "Calcul",
+  "icons": [
+    {
+      "src": "icon.png",
+      "purpose": "maskable any",
+      "sizes": "512x512"
+    }
+  ],
+  "lang": "fr-FR",
+  "start_url": "/mental/",
+  "display": "standalone",
+  "background_color": "white",
+  "theme_color": "black"
+}

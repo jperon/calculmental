@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="black">
+    <meta name="robots" content="none">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="icon.png">
+    <title>Calcul mental</title>
+    <meta name="description" content="Application de calcul mental">
+    <meta name="version" content="<<<version>>>">
+  </head>
+  <body>
+    <style>
+{{{{style.css}}}}
+{{{{katex.min.css}}}}
+    </style>
+    <div id='corps'>
+      <p>
+        Veuillez patienter ; si la page ne se charge pas, assurez-vous
+        que javascript est activé sur votre navigateur.
+      </p>
+    </div>
+  <script type="application/lua">
+local dom
+{{{{dom.lua}}}}
+
+{{{{index.lua}}}}
+  </script>
+  <script type="application/javascript">
+{{{{katex.min.js}}}}
+  </script>
+  <script type="application/javascript">
+{{{{fengariWeb.js}}}}
+  </script>
+  <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('sw.js')
+            .then(registration => {
+              console.log(
+                `Service Worker enregistré ! Ressource: ${registration.scope}`
+              );
+            })
+            .catch(err => {
+              console.log(
+                `Echec de l'enregistrement du Service Worker: ${err}`
+              );
+            });
+        });
+      }
+    </script>
+  </body>
+</html>
