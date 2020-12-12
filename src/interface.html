@@ -23,6 +23,10 @@
         que javascript est activé sur votre navigateur.
       </p>
     </div>
+    <div id="note_maj" class="note_version" hidden="true"><p>Mise-à-jour disponible</p></div>
+  <script type="application/javascript">
+{{{{katex.min.js}}}}
+  </script>
   <script type="application/lua">
 local dom
 {{{{dom.lua}}}}
@@ -30,28 +34,25 @@ local dom
 {{{{index.lua}}}}
   </script>
   <script type="application/javascript">
-{{{{katex.min.js}}}}
-  </script>
-  <script type="application/javascript">
 {{{{fengariWeb.js}}}}
   </script>
   <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker
-            .register('sw.js')
-            .then(registration => {
-              console.log(
-                `Service Worker enregistré ! Ressource: ${registration.scope}`
-              );
-            })
-            .catch(err => {
-              console.log(
-                `Echec de l'enregistrement du Service Worker: ${err}`
-              );
-            });
-        });
-      }
-    </script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker
+          .register('sw.js')
+          .then(registration => {
+            console.log(
+              `Service Worker enregistré ! Ressource: ${registration.scope}`
+            );
+          })
+          .catch(err => {
+            console.log(
+              `Echec de l'enregistrement du Service Worker: ${err}`
+            );
+          });
+      });
+    }
+  </script>
   </body>
 </html>

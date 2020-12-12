@@ -29,4 +29,4 @@
 .args input {width:4em; text-align:right;}
 .arg {display: inline-block;}
 .ctn {display: flex; flex-wrap: wrap;}
-#note_version {float:right; font-size: 1.2vw;}
+.note_version {float:right; font-size: 1.2vw;}

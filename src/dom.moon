@@ -7,19 +7,18 @@ gbId = doc\getElementById
 
 ----------------------- DOM -----------------------------------
 
-_G = _G
 H = {}
 setfenv or= (env) =>
   i = 1
   while true
-    name = debug.getupvalue(self, i)
+    name = debug.getupvalue(@, i)
     if name == "_ENV" then
-      debug.upvaluejoin self, i, (-> env), 1
+      debug.upvaluejoin @, i, (-> env), 1
       break
     elseif not name
       break
     i = i + 1
-  self
+  @
 
 _html = (i) ->
   switch type i
@@ -37,9 +36,10 @@ do
     r = {ishtml: true}
     r.__tostring = =>
       "<#{k}>"
-    r.__call = (s) =>
+    r.__call = (s, f) =>
       if type(s) == "table"
         ss = {}
+        s[#s+1] = f
         for i, v in ipairs s
           insert ss, _html v
           s[i] = nil
@@ -53,12 +53,11 @@ do
         rr.__call = (sss) =>
           "<#{k}#{attrs(s)}>#{sss}</#{k}>"
         setmetatable rr, rr
-        rr
       else
         "<#{k}>#{s}</#{k}>" if tostring s
     setmetatable r, r
-    H[k] = r
-    H[k]
+    @[k] = r
+    r
   setmetatable H, H
 
 
@@ -85,6 +84,7 @@ class EL
 
   __shl: (el) => @append el
 
+
 toArray = (t) ->
   _t = new Array
   dec = not t[0]
@@ -95,17 +95,15 @@ toArray = (t) ->
 
 toJS = (o) ->
   switch type o
-    when 'string'
-      js.tostring o
-    when 'table'
-      toArray o
+    when 'string' js.tostring o
+    when 'table' toArray o
     else o
 
 lancer = (f, t = 0) -> w\setTimeout f, t * 1000
 
 
 export dom = {
-  html: => _html setfenv(self, H)!
+  html: => _html setfenv(@, H)!
   :EL
   :toJS
   :lancer

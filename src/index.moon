@@ -1,4 +1,4 @@
-import EL, html from dom
+import EL, html, lancer from dom
 global: w, global: {document: doc} = require"js"
 import time from os
 import concat, insert, remove from table
@@ -331,6 +331,7 @@ body\replace html -> {
     button {id: "lancer", "C'est parti !"}
     div {
       id: "note_version"
+      class: "note_version"
       p {"Version #{doc\querySelector('meta[name="version"]').content}"}
     }
   }
@@ -362,37 +363,39 @@ for categorie, operation in pairs m
     table {id: id, style:"display:none"}
   }
   liste_categorie = EL id
-  for titre, exo in pairs operation
-    id_nombre, id_duree = "#{titre}_nombre", "#{titre}_duree"
-    liste_categorie << html -> {
-      label {class: "titre", (titre\gsub "_", " ")}
-      div {
-        id: "#{titre}_args"
-        class: "args ctn"
-        label {"&nbsp Nbre", input {id: id_nombre, value: 0}}
-        label {"&nbsp Durée", input {id: id_duree, value: exo.duree}}
-      }
-    }
-    el_titre_args = EL("#{titre}_args")
-    for k, v in pairs exo.args
-      el_titre_args << html -> {
+  lancer ->
+    for titre, exo in pairs operation
+      id_nombre, id_duree = "#{titre}_nombre", "#{titre}_duree"
+      liste_categorie << html -> {
+        label {class: "titre", (titre\gsub "_", " ")}
         div {
-          class: "arg"
-          label {
-            "&nbsp #{k}"
-            if type(v) == "boolean"
-              input {id: "#{titre}_#{k}", type:"checkbox"}
-            else
-              input {id: "#{titre}_#{k}", value: v}
-          }
+          id: "#{titre}_args"
+          class: "args ctn"
+          label {"&nbsp Nbre", input {id: id_nombre, value: 0}}
+          label {"&nbsp Durée", input {id: id_duree, value: exo.duree}}
         }
       }
-  titre_categorie = EL categorie
-  titre_categorie.el.onclick = ->
-    if liste_categorie.el.style.display == "none"
-      liste_categorie.el.style.display = "block"
-    else
-      liste_categorie.el.style.display = "none"
+      el_titre_args = EL("#{titre}_args")
+      lancer ->
+        for k, v in pairs exo.args
+          el_titre_args << html -> {
+            div {
+              class: "arg"
+              label {
+                "&nbsp #{k}"
+                if type(v) == "boolean"
+                  input {id: "#{titre}_#{k}", type:"checkbox"}
+                else
+                  input {id: "#{titre}_#{k}", value: v}
+              }
+            }
+          }
+    titre_categorie = EL categorie
+    titre_categorie.el.onclick = ->
+      if liste_categorie.el.style.display == "none"
+        liste_categorie.el.style.display = "block"
+      else
+        liste_categorie.el.style.display = "none"
 
 EL("titre").el.onclick = ->
   enonce < ""
