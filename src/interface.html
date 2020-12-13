@@ -14,38 +14,36 @@
   </head>
   <body>
     <style>
-{{{{style.css}}}}
-{{{{katex.min.css}}}}
+////style.css////
+////katex.min.css////
     </style>
-    <div id='corps'>
+    <div id='div_attente'>
       <p>
         Veuillez patienter ; si la page ne se charge pas, assurez-vous
         que javascript est activé sur votre navigateur.
       </p>
     </div>
-    <div id="note_maj" class="note_version" hidden="true"><p>Mise-à-jour disponible</p></div>
-  <script type="application/javascript">
-{{{{katex.min.js}}}}
-  </script>
+    <div id='corps'></div>
   <script type="application/lua">
-local dom
-{{{{dom.lua}}}}
-
-{{{{index.lua}}}}
+package.loaded.html = (function()
+////html.lua////
+end)()
+package.loaded.json = (function()
+////json.lua////
+end)()
+package.loaded.luajs = (function()
+////luajs.lua////
+end)()
+////index.lua////
   </script>
   <script type="application/javascript">
-{{{{fengariWeb.js}}}}
+////fengariWeb.js////
   </script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('sw.js')
-          .then(registration => {
-            console.log(
-              `Service Worker enregistré ! Ressource: ${registration.scope}`
-            );
-          })
           .catch(err => {
             console.log(
               `Echec de l'enregistrement du Service Worker: ${err}`
@@ -54,5 +52,6 @@ local dom
       });
     }
   </script>
+  <script defer src="./katex.min.js"></script>
   </body>
 </html>

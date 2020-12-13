@@ -2,7 +2,7 @@
 import wrap, yield from coroutine
 import open, stderr from io
 import date, execute, exit from os
-import concat, sort from table
+import concat, insert, sort from table
 import attributes, dir, mkdir from require "lfs"
 
 DIST = "dist"
@@ -52,17 +52,17 @@ do
 do
   execute "moonc #{SRC}/*.moon"
   page = assert open "#{SRC}/interface.html"
-  sortie = assert open "#{TEMPLATES}/index.html", "w"
+  ct = {}
   for line in page\lines!
-    i = line\match "{{{{(.-)}}}}"
-    if i
+    if i = line\match "////(.-)////"
       f = assert open "#{SRC}/#{i}"
-      ct = f\read("*a")\gsub("%%", "%%%%")
-      line = line\gsub "{{{{#{i}}}}}", ct
+      ct[#ct+1] = f\read "*a"
       f\close!
-    sortie\write line
-    sortie\write "\n"
-  sortie\close
+    else
+      ct[#ct+1] = line
+  sortie = assert open "#{TEMPLATES}/index.html", "w"
+  sortie\write(concat ct, "\n")
+  sortie\close!
   page\close!
 
 
@@ -77,13 +77,14 @@ fill_options = (input_dir, output_dir) ->
         fill_options input_path, output_path
       when "file"
         input = assert open input_path, "r"
-        output = assert open output_path, "w"
-        for line in input\lines!
-          k = line\match "<<<(.-)>>>"
-          line = line\gsub "<<<#{k}>>>", OPTIONS[k] if k and OPTIONS[k]
-          output\write line
-          output\write "\n"
-        output\close!
+        ct = input\read"*a"
         input\close!
+        for k in ct\gmatch "<<<(.-)>>>"
+          if OPTIONS[k]
+            print(k, OPTIONS[k])
+            ct = ct\gsub "<<<#{k}>>>", OPTIONS[k]
+        output = assert open output_path, "w"
+        output\write ct
+        output\close!
 
 fill_options TEMPLATES, DIST

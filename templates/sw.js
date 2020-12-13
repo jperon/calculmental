@@ -2,6 +2,8 @@ const CACHE = 'Calcul mental-pwa';
 const FILES = [
   './',
   './index.html',
+  './fengariWeb.js',
+  './katex.min.js',
   './fonts/KaTeX_Main-BoldItalic.woff2',
   './fonts/KaTeX_Main-Bold.woff2',
   './fonts/KaTeX_Main-Italic.woff2',
@@ -12,7 +14,6 @@ const FILES = [
 
 // On install, cache some resource.
 self.addEventListener('install', function(evt) {
-  console.log('The service worker is being installed.');
   // Open a cache and use `addAll()` with an array of assets to add all of them
   // to the cache. Ask the service worker to keep installing until the
   // returning promise resolves.
@@ -24,7 +25,6 @@ self.addEventListener('install', function(evt) {
 // On fetch, use cache but update the entry with the latest contents
 // from the server.
 self.addEventListener('fetch', function(evt) {
-  console.log('The service worker is serving the asset.');
   // You can use `respondWith()` to answer ASAP...
   evt.respondWith(fromCache(evt.request));
   // ...and `waitUntil()` to prevent the worker to be killed until

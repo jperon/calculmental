@@ -10,13 +10,12 @@ gbId = doc\getElementById
 setfenv or= (env) =>
   i = 1
   while true
-    name = debug.getupvalue(@, i)
-    if name == "_ENV" then
-      debug.upvaluejoin @, i, (-> env), 1
-      break
-    elseif not name
-      break
-    i = i + 1
+    if name = debug.getupvalue(@, i)
+      if name == "_ENV" then
+        debug.upvaluejoin @, i, (-> env), 1
+        break
+    else break
+    i += 1
   @
 
 local H
@@ -96,10 +95,20 @@ toJS = (o) ->
 
 lancer = (f, t = 0) -> w\setTimeout f, t * 1000
 
+local chrono
+do
+  _t0 = os.clock!
+  _t = _t0
+  chrono = (s) ->
+    t = os.clock!
+    print s, t - _t0, t - _t
+    _t = t
+
 
 export dom = {
   :html
   :EL
   :toJS
   :lancer
+  :chrono
 }

@@ -1,13 +1,15 @@
-import EL, html, lancer from dom
+import html from require "html"
+luajs = require "luajs"
+import EL, chrono, co_launch, launch from luajs
 global: w, global: {document: doc} = require"js"
 import time from os
 import concat, insert, remove from table
 import random, randomseed, sqrt from math
 randomseed(time!)
 
-
 --------------------- Calcul des énoncés --------------------
 
+-- _t = os.clock!
 local m
 do
   MIN = 100
@@ -92,7 +94,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs, div = bornes @args
+          min, _, delta, relatifs, div = bornes @args
           r, q = tirer min, delta, relatifs, div, true
           for i = 2, tonumber @args["Nbre_de_termes"]
             a, s = tirer min, delta, relatifs, div
@@ -163,7 +165,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs, div = bornes @args
+          min, _, delta, relatifs, div = bornes @args
           r, q = tirer min, delta, relatifs, div, true
           for i = 2, tonumber @args["Nbre_de_termes"]
             a, s = tirer min, delta, relatifs, div
@@ -182,7 +184,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta, relatifs, div = bornes @args
+          min, _, delta, relatifs, div = bornes @args
           r, q = tirer min, delta, relatifs, div, true
           o = pow 10, floor log abs(r), 10
           r = o * round r/o
@@ -204,7 +206,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes {Min:@args.b, Max:@args.a}
+          min, max, _ = bornes {Min:@args.b, Max:@args.a}
           ordre_max = pow(10, floor (log(max, 10) - 1))
           c = ordre_max * random ceil(max/ordre_max)
           d = random min
@@ -293,7 +295,7 @@ do
         }
         duree: 8
         fn: =>
-          min, max, delta = bornes @args
+          min, _, delta = bornes @args
           n = floor tirer min, delta
           "#{n} = ?", ->
             concat [d for d in facteurs n], ' × '
@@ -304,6 +306,7 @@ do
 -------- Procédure --------
 
 body = EL "corps"
+body\hide!
 body\replace html ->
   h1 -> a id:"titre", href:"#", "Calcul mental"
   div id: "exercices", ->
@@ -317,23 +320,48 @@ body\replace html ->
   div id: "reponse", class: "zone", ""
   div id: "chrono", class: "chrono", ""
 
+
+div_attente = EL "div_attente"
 bouton = EL "lancer"
 chr = EL "chrono"
 enonce = EL "enonce"
 liste_exercices = EL "liste_exercices"
 exercices = EL "exercices"
 reponse = EL "reponse"
+--print os.clock! - _t
+
+
+local afficher, avant_affichage
+do
+  attente = 0
+  afficher = ->
+    return if attente == 0
+    attente -= 1
+    if attente == 0
+      div_attente\hide!
+      body\show!
+      --print os.clock! - _t
+  avant_affichage = (fn) ->
+    attente += 1
+    fn
 
 chrono = (d, s=0) -> w\setTimeout (-> chr < d - t), 1000 * (t + s) for t = 0, d - 1
 
-for categorie, operation in pairs m
+_fn = (categorie, operation) ->
   id = "#{categorie}_table"
   liste_exercices << html ->
     h2 id: categorie, -> a href:"#", categorie
     table id: id, style: "display:none"
+  afficher!
   liste_categorie = EL id
-  lancer ->
-    for titre, exo in pairs operation
+  titre_categorie = EL categorie
+  titre_categorie\on "click", ->
+    if liste_categorie.element.style.display == "none"
+      liste_categorie\show "block"
+    else
+      liste_categorie\hide!
+  for titre, exo in pairs operation
+    launch ->
       id_nombre, id_duree = "#{titre}_nombre", "#{titre}_duree"
       liste_categorie << html ->
         label class: "titre", (titre\gsub "_", " ")
@@ -341,72 +369,72 @@ for categorie, operation in pairs m
           label "&nbsp Nbre", -> input id: id_nombre, value: 0
           label "&nbsp Durée", -> input id: id_duree, value: exo.duree
       el_titre_args = EL("#{titre}_args")
-      lancer ->
-        for k, v in pairs exo.args
-          el_titre_args << html ->
-            div class: "arg", ->
-              label "&nbsp #{k}", ->
-                if type(v) == "boolean"
-                  input id: "#{titre}_#{k}", type:"checkbox"
-                else
-                  input id: "#{titre}_#{k}", value: v
-    titre_categorie = EL categorie
-    titre_categorie.el.onclick = ->
-      if liste_categorie.el.style.display == "none"
-        liste_categorie.el.style.display = "block"
-      else
-        liste_categorie.el.style.display = "none"
+      for k, v in pairs exo.args
+        el_titre_args << html ->
+          div class: "arg", ->
+            label "&nbsp #{k}", ->
+              if type(v) == "boolean"
+                input id: "#{titre}_#{k}", type:"checkbox"
+              else
+                input id: "#{titre}_#{k}", value: v
 
-EL("titre").el.onclick = ->
-  enonce < ""
-  reponse < ""
-  enonce.el.style.display = "none"
-  reponse.el.style.display = "none"
-  exercices.el.style.visibility = "visible"
 
-bouton.el.onclick = ->
-  enonce.el.style.display = "block"
-  reponse.el.style.display = "block"
-  exercices.el.style.visibility = "hidden"
-  enonce < "Prêt ?"
-  serie = {}
-  t = EL("attente")\value!
-  chrono t - 1, 1
-  for _, categorie in pairs m
-    for titre, exo in pairs categorie
-      duree = tonumber(EL("#{titre}_duree")\value!) or 0
-      nombre = tonumber(EL("#{titre}_nombre")\value!) or 0
-      continue if nombre < 1
-      for arg, val in pairs exo.args
-        f = EL("#{titre}_#{arg}").el
-        val = f.checked or (f.value != "on" and f.value)
-        exo.args[arg] = val
-      for _ = 1, nombre
-        insert serie, {
-          fn: exo\fn
-          duree: duree
-          n_termes: exo.args["Nbre_de_termes"] or 2
-        }
-  reponses = {}
-  while #serie > 0
-    {:fn, :duree, :n_termes} = remove serie, random #serie
-    enonce.el.style["font-size"] = "#{1250/sqrt(n_termes)}%"
-    q, r = fn!
-    insert reponses, {q, r}
+--print "--2", os.clock! - _t
+co_launch [avant_affichage(-> _fn categorie, operation) for categorie, operation in pairs m], ->
+  EL("titre")\on "click", ->
+    enonce < ""
+    reponse < ""
+    enonce\hide!
+    reponse\hide!
+    exercices.element.style.visibility = "visible"
+
+  bouton\on "click", ->
+    enonce\show "block"
+    reponse\show "block"
+    exercices.element.style.visibility = "hidden"
+    enonce < "Prêt ?"
+    serie = {}
+    t = EL("attente")\value!
+    chrono t - 1, 1
+    for _, categorie in pairs m
+      for titre, exo in pairs categorie
+        duree = tonumber(EL("#{titre}_duree")\value!) or 0
+        nombre = tonumber(EL("#{titre}_nombre")\value!) or 0
+        continue if nombre < 1
+        for arg, val in pairs exo.args
+          f = EL("#{titre}_#{arg}").element
+          val = f.checked or (f.value != "on" and f.value)
+          exo.args[arg] = val
+        for _i = 1, nombre
+          insert serie, {
+            fn: exo\fn
+            duree: duree
+            n_termes: exo.args["Nbre_de_termes"] or 2
+          }
+    reponses = {}
+    while #serie > 0
+      {:fn, :duree, :n_termes} = remove serie, random #serie
+      enonce.element.style["font-size"] = "#{1250/sqrt(n_termes)}%"
+      q, r = fn!
+      insert reponses, {q, r}
+      w\setTimeout (->
+        w.katex\render q\gsub('\n', [[\\]]), enonce.element, throwOnError: false
+        chrono duree
+      ), 1000 * t
+      t = t + duree
     w\setTimeout (->
-      w.katex\render q\gsub('\n', [[\\]]), enonce.el, {throwOnError: false}
-      chrono duree
+      enonce < "Terminé !"
+      chr < ""
     ), 1000 * t
-    t = t + duree
-  w\setTimeout (->
-    enonce < "Terminé !"
-    chr < ""
-  ), 1000 * t
-  correction = EL("correction_fin").el
-  if correction.checked or (correction.value != "on" and correction.value)
-    w\setTimeout (->
-      enonce < ""
-      reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(%%s\\)}")\format(
-          r[2]!
-        ) for r in *reponses], "<br>"
-    ), 1000 * (t + 3)
+    correction = EL("correction_fin").element
+    if correction.checked or (correction.value != "on" and correction.value)
+      w\setTimeout (->
+        enonce < ""
+        reponse < concat [w.katex\renderToString r[1]\gsub("?", "\\textbf{\\(%%s\\)}")\format(
+            r[2]!
+          ) for r in *reponses], "<br/>"
+      ), 1000 * (t + 3)
+
+  --print os.clock! - _t
+
+--print "--3", os.clock! - _t
