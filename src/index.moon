@@ -304,48 +304,18 @@ do
 -------- Procédure --------
 
 body = EL "corps"
-body\replace html -> {
-  h1 {a {id:"titre", href:"#", "Calcul mental"}}
-  div {
-    id: "exercices"
-    div {
-      div {
-        class: "ctn"
-        label {
-          "Délai avant de commencer"
-          input {id: "attente", class: "args", value: 3}
-        }
-      }
-      div {
-        class: "ctn"
-        label {
-          "Correction à la fin"
-          input {id: "correction_fin", type: "checkbox", checked: true}
-        }
-      }
-    }
-    div {
-      id: "liste_exercices"
-    }
-    "&nbsp"
-    button {id: "lancer", "C'est parti !"}
-    div {
-      id: "note_version"
-      class: "note_version"
-      p {"Version #{doc\querySelector('meta[name="version"]').content}"}
-    }
-  }
-  div {
-    id: "question", class: "zone"
-    p {id: "enonce"}
-  }
-  div {
-    id: "reponse", class: "zone"
-  }
-  div {
-    id: "chrono", class: "chrono"
-  }
-}
+body\replace html ->
+  h1 -> a id:"titre", href:"#", "Calcul mental"
+  div id: "exercices", ->
+    div class: "ctn", -> label "Délai avant de commencer", -> input id: "attente", class: "args", value: 3
+    div class: "ctn", -> label "Correction à la fin", -> input id: "correction_fin", type: "checkbox", checked: true
+    div id: "liste_exercices", ""
+    text "&nbsp"
+    button id: "lancer", "C'est parti !"
+    div id: "note_version", class: "note_version", -> p "Version #{doc\querySelector('meta[name="version"]').content}"
+  div id: "question", class: "zone", -> p id: "enonce"
+  div id: "reponse", class: "zone", ""
+  div id: "chrono", class: "chrono", ""
 
 bouton = EL "lancer"
 chr = EL "chrono"
@@ -358,38 +328,28 @@ chrono = (d, s=0) -> w\setTimeout (-> chr < d - t), 1000 * (t + s) for t = 0, d 
 
 for categorie, operation in pairs m
   id = "#{categorie}_table"
-  liste_exercices << html -> {
-    h2 {id: categorie, a {href:"#", categorie}}
-    table {id: id, style:"display:none"}
-  }
+  liste_exercices << html ->
+    h2 id: categorie, -> a href:"#", categorie
+    table id: id, style: "display:none"
   liste_categorie = EL id
   lancer ->
     for titre, exo in pairs operation
       id_nombre, id_duree = "#{titre}_nombre", "#{titre}_duree"
-      liste_categorie << html -> {
-        label {class: "titre", (titre\gsub "_", " ")}
-        div {
-          id: "#{titre}_args"
-          class: "args ctn"
-          label {"&nbsp Nbre", input {id: id_nombre, value: 0}}
-          label {"&nbsp Durée", input {id: id_duree, value: exo.duree}}
-        }
-      }
+      liste_categorie << html ->
+        label class: "titre", (titre\gsub "_", " ")
+        div id: "#{titre}_args", class: "args ctn", ->
+          label "&nbsp Nbre", -> input id: id_nombre, value: 0
+          label "&nbsp Durée", -> input id: id_duree, value: exo.duree
       el_titre_args = EL("#{titre}_args")
       lancer ->
         for k, v in pairs exo.args
-          el_titre_args << html -> {
-            div {
-              class: "arg"
-              label {
-                "&nbsp #{k}"
+          el_titre_args << html ->
+            div class: "arg", ->
+              label "&nbsp #{k}", ->
                 if type(v) == "boolean"
-                  input {id: "#{titre}_#{k}", type:"checkbox"}
+                  input id: "#{titre}_#{k}", type:"checkbox"
                 else
-                  input {id: "#{titre}_#{k}", value: v}
-              }
-            }
-          }
+                  input id: "#{titre}_#{k}", value: v
     titre_categorie = EL categorie
     titre_categorie.el.onclick = ->
       if liste_categorie.el.style.display == "none"

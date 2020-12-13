@@ -81,7 +81,6 @@ do
     return _fn_0(_base_0, ...)
   end
 end
-local H = { }
 local setfenv = setfenv or function(self, env)
   local i = 1
   while true do
@@ -98,96 +97,101 @@ local setfenv = setfenv or function(self, env)
   end
   return self
 end
-local _html
-_html = function(i)
-  local _exp_0 = type(i)
-  if 'table' == _exp_0 then
-    if i.ishtml then
-      return tostring(i)
-    else
-      return concat((function()
+local H
+local html
+html = function(self)
+  local _exp_0 = type(self)
+  if "table" == _exp_0 then
+    return concat((function()
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #self do
+        local v = self[_index_0]
+        _accum_0[_len_0] = html(v)
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
+    end)())
+  elseif "function" == _exp_0 then
+    local env = setmetatable({ }, H)
+    setfenv(self, env)()
+    return concat((function()
+      local _accum_0 = { }
+      local _len_0 = 1
+      for _index_0 = 1, #env do
+        local i = env[_index_0]
+        _accum_0[_len_0] = tostring(i)
+        _len_0 = _len_0 + 1
+      end
+      return _accum_0
+    end)())
+  else
+    return tostring(self)
+  end
+end
+H = {
+  __index = function(self, k)
+    if _G[k] and k ~= "table" then
+      return _G[k]
+    end
+    if k == "htable" then
+      k = "table"
+    end
+    if k:sub(1, 1) == "_" then
+      k = k:sub(2)
+    end
+    local v = {
+      attrs = { }
+    }
+    v.__tostring = function(self)
+      local attrs = next(self.attrs) and (concat((function()
         local _accum_0 = { }
         local _len_0 = 1
-        for _index_0 = 1, #i do
-          local v = i[_index_0]
-          _accum_0[_len_0] = _html(v)
+        for _k, _v in pairs(self.attrs) do
+          _accum_0[_len_0] = type(_v) == "boolean" and (_v and " " .. tostring(_k) or "") or " " .. tostring(_k) .. "=\"" .. tostring(_v) .. "\""
+          _len_0 = _len_0 + 1
+        end
+        return _accum_0
+      end)())) or ""
+      local content = concat((function()
+        local _accum_0 = { }
+        local _len_0 = 1
+        for _index_0 = 1, #self do
+          local i = self[_index_0]
+          _accum_0[_len_0] = tostring(i)
           _len_0 = _len_0 + 1
         end
         return _accum_0
       end)())
-    end
-  elseif 'function' == _exp_0 then
-    return _html(i())
-  else
-    return tostring(i)
-  end
-end
-do
-  local attrs
-  attrs = function(t)
-    local a = concat((function()
-      local _accum_0 = { }
-      local _len_0 = 1
-      for attr, val in pairs(t) do
-        _accum_0[_len_0] = tostring(attr) .. tostring(val == true and '' or '=' .. val)
-        _len_0 = _len_0 + 1
-      end
-      return _accum_0
-    end)(), ' ')
-    if a ~= '' then
-      return ' ' .. a
-    else
-      return ''
-    end
-  end
-  H.__index = function(self, k)
-    if _G[k] and k ~= "table" then
-      return _G[k]
-    end
-    if k == 'htable' then
-      k = 'table'
-    end
-    local r = {
-      ishtml = true
-    }
-    r.__tostring = function(self)
-      return "<" .. tostring(k) .. ">"
-    end
-    r.__call = function(self, s, f)
-      if type(s) == "table" then
-        local ss = { }
-        s[#s + 1] = f
-        for i, v in ipairs(s) do
-          insert(ss, _html(v))
-          s[i] = nil
-        end
-        ss = concat(ss)
-        local rr = {
-          ishtml = true
-        }
-        rr.__tostring = function(self)
-          if ss then
-            return "<" .. tostring(k) .. tostring(attrs(s)) .. ">" .. tostring(ss) .. "</" .. tostring(k) .. ">"
-          else
-            return "<" .. tostring(k) .. tostring(attrs(s)) .. ">"
-          end
-        end
-        rr.__call = function(self, sss)
-          return "<" .. tostring(k) .. tostring(attrs(s)) .. ">" .. tostring(sss) .. "</" .. tostring(k) .. ">"
-        end
-        return setmetatable(rr, rr)
+      if k == "text" then
+        return content
+      elseif #self == 0 then
+        return "<" .. tostring(k) .. tostring(attrs) .. ">"
       else
-        if tostring(s) then
-          return "<" .. tostring(k) .. ">" .. tostring(s) .. "</" .. tostring(k) .. ">"
+        return "<" .. tostring(k) .. tostring(attrs) .. ">" .. tostring(content) .. "</" .. tostring(k) .. ">"
+      end
+    end
+    v.__call = function(self, ...)
+      local _args = {
+        ...
+      }
+      for _index_0 = 1, #_args do
+        local i = _args[_index_0]
+        if type(i) == "table" then
+          for _k, _v in pairs(i) do
+            self.attrs[_k] = _v
+          end
+        else
+          self[#self + 1] = html(i)
         end
       end
     end
-    setmetatable(r, r)
-    self[k] = r
-    return r
+    setmetatable(v, v)
+    self[#self + 1] = v
+    return v
   end
-  setmetatable(H, H)
-end
+}
+setmetatable(H, H)
 local EL
 do
   local _class_0
@@ -263,9 +267,7 @@ lancer = function(f, t)
   return w:setTimeout(f, t * 1000)
 end
 dom = {
-  html = function(self)
-    return _html(setfenv(self, H)())
-  end,
+  html = html,
   EL = EL,
   toJS = toJS,
   lancer = lancer
@@ -693,72 +695,67 @@ do
 end
 local body = EL("corps")
 body:replace(html(function()
-  return {
-    h1({
-      a({
-        id = "titre",
-        href = "#",
-        "Calcul mental"
-      })
-    }),
+  h1(function()
+    return a({
+      id = "titre",
+      href = "#"
+    }, "Calcul mental")
+  end)
+  div({
+    id = "exercices"
+  }, function()
     div({
-      id = "exercices",
-      div({
-        div({
-          class = "ctn",
-          label({
-            "Délai avant de commencer",
-            input({
-              id = "attente",
-              class = "args",
-              value = 3
-            })
-          })
-        }),
-        div({
-          class = "ctn",
-          label({
-            "Correction à la fin",
-            input({
-              id = "correction_fin",
-              type = "checkbox",
-              checked = true
-            })
-          })
+      class = "ctn"
+    }, function()
+      return label("Délai avant de commencer", function()
+        return input({
+          id = "attente",
+          class = "args",
+          value = 3
         })
-      }),
-      div({
-        id = "liste_exercices"
-      }),
-      "&nbsp",
-      button({
-        id = "lancer",
-        "C'est parti !"
-      }),
-      div({
-        id = "note_version",
-        class = "note_version",
-        p({
-          "Version " .. tostring(doc:querySelector('meta[name="version"]').content)
+      end)
+    end)
+    div({
+      class = "ctn"
+    }, function()
+      return label("Correction à la fin", function()
+        return input({
+          id = "correction_fin",
+          type = "checkbox",
+          checked = true
         })
-      })
-    }),
+      end)
+    end)
     div({
-      id = "question",
-      class = "zone",
-      p({
-        id = "enonce"
-      })
-    }),
-    div({
-      id = "reponse",
-      class = "zone"
-    }),
-    div({
-      id = "chrono",
-      class = "chrono"
+      id = "liste_exercices"
+    }, "")
+    text("&nbsp")
+    button({
+      id = "lancer"
+    }, "C'est parti !")
+    return div({
+      id = "note_version",
+      class = "note_version"
+    }, function()
+      return p("Version " .. tostring(doc:querySelector('meta[name="version"]').content))
+    end)
+  end)
+  div({
+    id = "question",
+    class = "zone"
+  }, function()
+    return p({
+      id = "enonce"
     })
-  }
+  end)
+  div({
+    id = "reponse",
+    class = "zone"
+  }, "")
+  return div({
+    id = "chrono",
+    class = "chrono"
+  }, "")
 end))
 local bouton = EL("lancer")
 local chr = EL("chrono")
@@ -780,75 +777,65 @@ end
 for categorie, operation in pairs(m) do
   local id = tostring(categorie) .. "_table"
   local _ = liste_exercices << html(function()
-    return {
-      h2({
-        id = categorie,
-        a({
-          href = "#",
-          categorie
-        })
-      }),
-      table({
-        id = id,
-        style = "display:none"
-      })
-    }
+    h2({
+      id = categorie
+    }, function()
+      return a({
+        href = "#"
+      }, categorie)
+    end)
+    return table({
+      id = id,
+      style = "display:none"
+    })
   end)
   local liste_categorie = EL(id)
   lancer(function()
     for titre, exo in pairs(operation) do
       local id_nombre, id_duree = tostring(titre) .. "_nombre", tostring(titre) .. "_duree"
       _ = liste_categorie << html(function()
-        return {
-          label({
-            class = "titre",
-            (titre:gsub("_", " "))
-          }),
-          div({
-            id = tostring(titre) .. "_args",
-            class = "args ctn",
-            label({
-              "&nbsp Nbre",
-              input({
-                id = id_nombre,
-                value = 0
-              })
-            }),
-            label({
-              "&nbsp Durée",
-              input({
-                id = id_duree,
-                value = exo.duree
-              })
+        label({
+          class = "titre"
+        }, (titre:gsub("_", " ")))
+        return div({
+          id = tostring(titre) .. "_args",
+          class = "args ctn"
+        }, function()
+          label("&nbsp Nbre", function()
+            return input({
+              id = id_nombre,
+              value = 0
             })
-          })
-        }
+          end)
+          return label("&nbsp Durée", function()
+            return input({
+              id = id_duree,
+              value = exo.duree
+            })
+          end)
+        end)
       end)
       local el_titre_args = EL(tostring(titre) .. "_args")
       lancer(function()
         for k, v in pairs(exo.args) do
           _ = el_titre_args << html(function()
-            return {
-              div({
-                class = "arg",
-                label({
-                  "&nbsp " .. tostring(k),
-                  (function()
-                    if type(v) == "boolean" then
-                      return input({
-                        id = tostring(titre) .. "_" .. tostring(k),
-                        type = "checkbox"
-                      })
-                    else
-                      return input({
-                        id = tostring(titre) .. "_" .. tostring(k),
-                        value = v
-                      })
-                    end
-                  end)()
-                })
-              })
-            }
+            return div({
+              class = "arg"
+            }, function()
+              return label("&nbsp " .. tostring(k), function()
+                if type(v) == "boolean" then
+                  return input({
+                    id = tostring(titre) .. "_" .. tostring(k),
+                    type = "checkbox"
+                  })
+                else
+                  return input({
+                    id = tostring(titre) .. "_" .. tostring(k),
+                    value = v
+                  })
+                end
+              end)
+            end)
           end)
         end
       end)

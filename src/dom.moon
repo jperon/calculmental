@@ -7,7 +7,6 @@ gbId = doc\getElementById
 
 ----------------------- DOM -----------------------------------
 
-H = {}
 setfenv or= (env) =>
   i = 1
   while true
@@ -20,45 +19,41 @@ setfenv or= (env) =>
     i = i + 1
   @
 
-_html = (i) ->
-  switch type i
-    when 'table' tostring i if i.ishtml else concat[_html v for v in *i]
-    when 'function' _html i!
-    else tostring i
+local H
 
-do
-  attrs = (t) ->
-    a = concat ["#{attr}#{val == true and '' or '=' .. val}" for attr, val in pairs t], ' '
-    ' '..a if a != '' else ''
-  H.__index = (k) =>
-    return _G[k] if _G[k] and k != "table"
-    k = 'table' if k == 'htable'
-    r = {ishtml: true}
-    r.__tostring = =>
-      "<#{k}>"
-    r.__call = (s, f) =>
-      if type(s) == "table"
-        ss = {}
-        s[#s+1] = f
-        for i, v in ipairs s
-          insert ss, _html v
-          s[i] = nil
-        ss = concat ss
-        rr = {ishtml: true}
-        rr.__tostring = =>
-          if ss
-            "<#{k}#{attrs(s)}>#{ss}</#{k}>"
-          else
-            "<#{k}#{attrs(s)}>"
-        rr.__call = (sss) =>
-          "<#{k}#{attrs(s)}>#{sss}</#{k}>"
-        setmetatable rr, rr
+html = =>
+  switch type @
+    when "table" concat[html(v) for v in *@]
+    when "function"
+      env = setmetatable {}, H
+      setfenv(@, env)!
+      concat [tostring(i) for i in *env]
+    else tostring @
+
+H = __index: (k) =>
+  return _G[k] if _G[k] and k ~= "table"
+  k = "table" if k == "htable"
+  k = k\sub(2) if k\sub(1, 1) == "_"
+  v = {attrs: {}}
+  v.__tostring = =>
+    attrs = next(@attrs) and (
+      concat [type(_v) == "boolean" and (_v and " #{_k}" or "") or " #{_k}=\"#{_v}\"" for _k, _v in pairs @attrs]
+    ) or ""
+    content = concat [tostring(i) for i in *@]
+    if k == "text" then content
+    elseif #@ == 0 then "<#{k}#{attrs}>"
+    else "<#{k}#{attrs}>#{content}</#{k}>"
+  v.__call = (...) =>
+    _args = {...}
+    for i in *_args
+      if type(i) == "table"
+        @attrs[_k] = _v for _k, _v in pairs i
       else
-        "<#{k}>#{s}</#{k}>" if tostring s
-    setmetatable r, r
-    @[k] = r
-    r
-  setmetatable H, H
+        @[#@+1] = html i
+  setmetatable v, v
+  @[#@+1] = v
+  v
+setmetatable H, H
 
 
 class EL
@@ -103,7 +98,7 @@ lancer = (f, t = 0) -> w\setTimeout f, t * 1000
 
 
 export dom = {
-  html: => _html setfenv(@, H)!
+  :html
   :EL
   :toJS
   :lancer
