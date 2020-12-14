@@ -1,8 +1,9 @@
 #!/usr/bin/env moon
+package.path = "src/?.lua;#{package.path}"
 import wrap, yield from coroutine
 import open, stderr from io
 import date, execute, exit from os
-import concat, insert, sort from table
+import concat, sort from table
 import attributes, dir, mkdir from require "lfs"
 
 DIST = "dist"
@@ -51,19 +52,10 @@ do
 
 do
   execute "moonc #{SRC}/*.moon"
-  page = assert open "#{SRC}/interface.html"
-  ct = {}
-  for line in page\lines!
-    if i = line\match "////(.-)////"
-      f = assert open "#{SRC}/#{i}"
-      ct[#ct+1] = f\read "*a"
-      f\close!
-    else
-      ct[#ct+1] = line
-  sortie = assert open "#{TEMPLATES}/index.html", "w"
-  sortie\write(concat ct, "\n")
+  ct = require("#{SRC}/interface") OPTIONS
+  sortie = assert open "#{DIST}/index.html", "w"
+  sortie\write ct
   sortie\close!
-  page\close!
 
 
 fill_options = (input_dir, output_dir) ->
