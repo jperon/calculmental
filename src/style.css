@@ -14,6 +14,11 @@
 }
 .titre {font-weight:bold}
 .resultat {font-weight:bold}
+#parametres {
+  position:sticky;
+  background-color:white;
+  top:0;
+}
 #enonce {
   width:100%;
   height:100%;

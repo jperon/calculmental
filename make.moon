@@ -7,6 +7,7 @@ import concat, sort from table
 import attributes, dir, mkdir from require "lfs"
 
 DIST = "dist"
+STATIC = "#{DIST}/static"
 SRC = "src"
 TEMPLATES = "templates"
 
@@ -51,7 +52,7 @@ do
 
 
 do
-  execute "moonc #{SRC}/*.moon"
+  execute "./moon_compile.sh"
   ct = require("#{SRC}/interface") OPTIONS
   sortie = assert open "#{DIST}/index.html", "w"
   sortie\write ct
@@ -79,4 +80,4 @@ fill_options = (input_dir, output_dir) ->
         output\write ct
         output\close!
 
-fill_options TEMPLATES, DIST
+fill_options TEMPLATES, STATIC

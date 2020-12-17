@@ -2,14 +2,16 @@ const CACHE = 'Calcul mental-pwa';
 const FILES = [
   './',
   './index.html',
-  './fengariWeb.js',
-  './katex.min.js',
-  './fonts/KaTeX_Main-BoldItalic.woff2',
-  './fonts/KaTeX_Main-Bold.woff2',
-  './fonts/KaTeX_Main-Italic.woff2',
-  './fonts/KaTeX_Main-Regular.woff2',
-  './icon.png',
-  './favicon.ico'
+  './static/fengariWeb.js',
+  './static/katex.min.js',
+  './static/katex.min.css',
+  './static/install_sw.js',
+  './static/fonts/KaTeX_Main-BoldItalic.woff2',
+  './static/fonts/KaTeX_Main-Bold.woff2',
+  './static/fonts/KaTeX_Main-Italic.woff2',
+  './static/fonts/KaTeX_Main-Regular.woff2',
+  './static/icon.png',
+  './static/favicon.ico'
 ];
 
 // On install, cache some resource.
