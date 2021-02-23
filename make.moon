@@ -53,7 +53,7 @@ do
 
 do
   execute "./moon_compile.sh"
-  ct = require("#{SRC}/interface") OPTIONS
+  ct = require("#{SRC}/index") OPTIONS
   sortie = assert open "#{DIST}/index.html", "w"
   sortie\write ct
   sortie\close!
@@ -76,8 +76,15 @@ fill_options = (input_dir, output_dir) ->
           if OPTIONS[k]
             print(k, OPTIONS[k])
             ct = ct\gsub "<<<#{k}>>>", OPTIONS[k]
+        for k in ct\gmatch "<<<<(.-)>>>>"
+          print k
+          f = assert open(k), "#{f} n’existe pas."
+          ct = ct\gsub "<<<<#{k}>>>>", f\read'*a'
+          f\close!
         output = assert open output_path, "w"
         output\write ct
         output\close!
 
 fill_options TEMPLATES, STATIC
+
+execute "mv #{STATIC}/sw.js #{DIST}/sw.js"

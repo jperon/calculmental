@@ -25,7 +25,7 @@ tirer = (min, delta, relatifs, div=1, sansparentheses) ->
 
 premiers = {2, 3, 5, 7}
 premiers.__index = (k) =>
-  n = @[k - 1] + 2
+  n = @[k-1] + 2
   local non_premier
   while non_premier
     for d in *@
@@ -65,17 +65,19 @@ facteurs = =>
     fini = true
     floor @
 
-{
-  categories: {"Addition", "Soustraction", "Multiplication", "Division", "Arithmétique"}
-  ["Addition" ]: {
-    ["Somme"]: {
-      args: {
+categories = {"Addition", "Soustraction", "Multiplication", "Division", "Arithmétique", "Primaire"}
+
+local enonces
+enonces =
+  :categories
+  "Addition":
+    "Somme":
+      args:
         Min: 10
         Max: 100
-        ["Nbre_de_termes"]: 2
+        "Nbre_de_termes": 2
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         min, _, delta, relatifs, div = bornes @args
@@ -85,15 +87,13 @@ facteurs = =>
           q = "#{q} + #{s}"
           r = r + a
         "#{q}\n= ?", -> "%f"\format r
-    }
-    ["Additions_soustractions"]: {
-      args: {
+    "Additions_soustractions":
+      args:
         Min: 10
         Max: 100
-        ["Nbre_de_termes"]: 3
+        "Nbre_de_termes": 3
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         n_termes = tonumber @args["Nbre_de_termes"]
@@ -106,16 +106,13 @@ facteurs = =>
           q = q .. (soustraction and " - #{s}" or " + #{s}")
           r = r + (soustraction and -a or a)
         "#{q}\n= ?", -> "%f"\format r
-    }
-  }
-  ["Soustraction" ]: {
-    ["Différence"]: {
-      args: {
+  "Soustraction":
+    "Différence":
+      args:
         Min: 10
         Max: 100
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         min, max, delta, relatifs, div = bornes @args
@@ -123,28 +120,23 @@ facteurs = =>
         delta = a - min if not relatifs and max > a
         b, s = tirer min, delta, relatifs, div
         "#{q} - #{s}\n= ?", -> "%f"\format a - b
-    }
-    ["Complément"]: {
-      args: {
+    "Complément":
+      args:
         Min: 10
         Ref: 100
-      }
       duree: 8
       fn: =>
         min, max, delta = bornes {Min: @args.Min, Max: @args.Ref}
         a = min + random delta
         "#{a} + ?\n= #{max}", -> "%f"\format max - a
-    }
-  }
-  ["Multiplication" ]: {
-    ["Produit"]: {
-      args: {
+  "Multiplication":
+    "Produit":
+      args:
         Min: 10
         Max: 100
-        ["Nbre_de_termes"]: 2
+        "Nbre_de_termes": 2
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         min, _, delta, relatifs, div = bornes @args
@@ -154,15 +146,13 @@ facteurs = =>
           q = "#{q} × #{s}"
           r = r * a
         "#{q}\n= ?", -> "%f"\format round r, 2 * tonumber @args["Décimales"]
-    }
-    ["Ordre_de_grandeur"]: {
-      args: {
+    "Ordre_de_grandeur":
+      args:
         Min: 10
         Max: 100
-        ["Nbre_de_termes"]: 2
+        "Nbre_de_termes": 2
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         min, _, delta, relatifs, div = bornes @args
@@ -178,12 +168,10 @@ facteurs = =>
           r = r * a
           rs = "#{rs} × " .. (a > 0 and "%f" or "(%f)")\format a
         "#{q}\n≈ ?", -> "#{rs} = %f"\format r
-    }
-    ["Identités_remarquables"]: {
-      args: {
+    "Identités_remarquables":
+      args:
         a: 100
         b: 10
-      }
       duree: 8
       fn: =>
         min, max, _ = bornes {Min:@args.b, Max:@args.a}
@@ -193,12 +181,10 @@ facteurs = =>
         a = c + d
         b = c - d
         "#{a} × #{b} \n= ?", -> "#{c}^2 - #{d}^2 = #{a * b}"
-    }
-    ["Multiplication_astucieuse"]: {
-      args: {
+    "Multiplication_astucieuse":
+      args:
         Base: 100
-        ["Différence"]: 10
-      }
+        "Différence": 10
       duree: 8
       fn: =>
         min, max, delta = bornes {Min:@args["Différence"], Max:@args.Base}
@@ -212,16 +198,13 @@ facteurs = =>
         a = floor c + d
         b = floor c - d + diff
         "#{a} × #{b} \n= ?", -> "#{c} \\times #{c + diff} + #{d} \\times #{diff - d} = #{a * b}"
-    }
-  }
-  ["Division" ]: {
-    ["Quotient"]: {
-      args: {
+  "Division":
+    "Quotient":
+      args:
         Min: 2
         Max: 400
         Relatifs: false
-        ["Décimales"]: 0
-      }
+        "Décimales": 0
       duree: 8
       fn: =>
         min, max, delta, relatifs, div = bornes @args
@@ -232,12 +215,10 @@ facteurs = =>
         decimales = 2 * tonumber @args["Décimales"]
         n, d = round(n, decimales), round(d, decimales)
         "\\frac{%f}{%f}\n= ?"\format(n, d), ->  "%f"\format round(n / d, decimales)
-    }
-    ["Division_astucieuse"]: {
-      args: {
+    "Division_astucieuse":
+      args:
         Min: 10
         Max: 1000
-      }
       duree: 8
       fn: =>
         min, max, delta = bornes @args
@@ -250,31 +231,116 @@ facteurs = =>
         nb = d * random dd
         n = na + ns * nb
         "\\frac{%f}{%f} \n= ?"\format(n, d), -> "\\frac{%f %s %f}{%d} = %f"\format na, ns == 1 and "+" or "-", nb, d, n/d
-    }
-    ["Division_euclidienne"]: {
-      args: {
+    "Division_euclidienne":
+      args:
         Min: 2
         Max: 200
-      }
       duree: 8
       fn: =>
         min, max, delta = bornes @args
         d = tirer min, ceil(2 * sqrt delta)
         n = tirer d, max - d
         "%f = %f × ? + ?"\format(n, d), -> floor(n / d), floor n % d
-    }
-  }
-  ["Arithmétique" ]: {
-    ["Décomposition_en_facteurs_premiers"]: {
-      args: {
+  "Arithmétique":
+    "Décomposition_en_facteurs_premiers":
+      args:
         Min: 2
         Max: 200
-      }
       duree: 8
       fn: =>
         min, _, delta = bornes @args
         n = floor tirer min, delta
         "#{n} = ?", -> concat [d for d in facteurs n], ' × '
-    }
-  }
-}
+  "Primaire":
+    "Multiplier":
+      args:
+        Multiplicateurs: "2;3;4;5;6;7;8;9"
+        Min: 1
+        Max: 10
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        multiplicateurs = [t for t in @args.Multiplicateurs\gmatch "[^;]+"]
+        r = multiplicateurs[random #multiplicateurs]
+        a, s = tirer min, delta, nil, nil
+        q = "#{r} × #{s}"
+        r = r * a
+        "#{q}\n= ?", -> "%f"\format r
+    "Diviser":
+      args:
+        Diviseurs: "2;4;5;10;25;100;1000"
+        Min: 1
+        Max: 1000
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        diviseurs = [t for t in @args.Diviseurs\gmatch "[^;]+"]
+        r = diviseurs[random #diviseurs]
+        a, s = tirer min, delta, nil, nil
+        q = "#{s} ÷ #{r}"
+        r = a / r
+        "#{q}\n= ?", -> "%f"\format r
+    "Doubler,_tripler,_quadrupler":
+      args:
+        Multiplicateurs: "2;3;4"
+        Min: 1
+        Max: 100
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        multiplicateurs = [t for t in @args.Multiplicateurs\gmatch "[^;]+"]
+        r = multiplicateurs[random #multiplicateurs]
+        a, s = tirer min, delta, nil, nil
+        q = ({'Double', 'Triple', 'Quadruple'})[r-1]
+        r = r * a
+        "\\text{#{q} }\n\\text{de } #{s} = ?", -> "%f"\format r
+    "Ajouter":
+      args:
+        Valeurs: "8;9;11;21;18;19;28;29"
+        Min: 5
+        Max: 100
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        valeurs = [t for t in @args.Valeurs\gmatch "[^;]+"]
+        r = valeurs[random #valeurs]
+        a, s = tirer min, delta, nil, nil
+        q = "#{s} + #{r}"
+        r = a + r
+        "#{q}\n= ?", -> "%f"\format r
+    "Retrancher":
+      args:
+        Valeurs: "8;9;11;21;18;19;28;29"
+        Min: 5
+        Max: 100
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        valeurs = [t for t in @args.Valeurs\gmatch "[^;]+"]
+        r = valeurs[random #valeurs]
+        a, s = tirer min, delta, nil, nil
+        q = "#{s} - #{r}"
+        r = a - r
+        "#{q}\n= ?", -> "%f"\format r
+    "Complément_":
+      args:
+        Min: 10
+        Ref: 100
+      duree: 12
+      fn: (...) -> enonces["Soustraction"]["Complément"].fn(...)
+    "Pourcentage":
+      args:
+        Pourcentages: "5;10;20;25;40;50;90;100;150;200"
+        Min: 1
+        Max: 500
+      duree: 5
+      fn: =>
+        min, _, delta, _, _ = bornes @args
+        pourcentages = [t for t in @args.Pourcentages\gmatch "[^;]+"]
+        r = pourcentages[random #pourcentages]
+        a, s = tirer min, delta, nil, nil
+        q = "#{r}\\percent \\text{ de } #{s}"
+        r = r * a / 100
+        "#{q}\n= ?", -> "%f"\format r
+
+enonces
